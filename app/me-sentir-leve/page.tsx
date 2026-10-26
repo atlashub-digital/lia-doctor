@@ -1,0 +1,12 @@
+import type {Metadata} from 'next';
+import Link from 'next/link';
+import {BookArt} from '@/components/BookArt';
+export const metadata:Metadata={title:'Me Sentir Leve — Coleção editorial',description:'Explore Tomei Mounjaro. E Agora? e Corpo Forte — Além da Balança.',alternates:{canonical:'/me-sentir-leve'}};
+export default function MeSentirLeve(){
+ return <><section className="collection-hero leve-hero"><div className="container"><span className="eyebrow">LIA.DOCTOR / COLEÇÕES / 01</span><h1>Me Sentir <em>Leve.</em></h1><p>Informação sem alarmismo. Novas perguntas. Um olhar mais atento para a sua saúde, rotina e bem-estar.</p><div className="section-rule"/></div></section>
+ <section className="section"><div className="container"><div className="section-heading left-heading"><span className="kicker">LIVROS DA COLEÇÃO</span><h2>Escolha por onde <em>começar.</em></h2></div>
+ <div className="product-list">
+  <article className="feature-product"><div className="feature-visual"><BookArt variant="mounjaro" title="Tomei Mounjaro. E Agora?" subtitle="Perguntas, informação e cuidado." label="EDIÇÃO DIGITAL · 97 PÁGINAS"/></div><div className="feature-copy"><span className="kicker">NOVA EDIÇÃO · MSL001</span><h3>Tomei Mounjaro.<br/><em>E Agora?</em></h3><p>Uma leitura educativa para organizar dúvidas e conversar com profissionais de saúde com mais informação. Sem promessas de resultados ou instruções de automedicação.</p><div className="pills"><span>97 páginas</span><span>eBook digital</span><span>Hotmart</span></div><Link className="btn btn-primary" href="/me-sentir-leve/tomei-mounjaro-e-agora">Conhecer o livro <span aria-hidden="true">↗</span></Link></div></article>
+  <article className="feature-product"><div className="feature-visual"><BookArt variant="corpo" title="Corpo Forte" subtitle="Além da Balança" label="COM WORKBOOK"/></div><div className="feature-copy"><span className="kicker">CORPO FORTE · MSL002 + MSL003</span><h3>Corpo Forte<br/><em>Além da Balança</em></h3><p>Um livro digital com o caderno O Meu Corpo em Construção. Um percurso de leituras e atividades opcionais para olhar para a força e o progresso de outras maneiras.</p><div className="pills"><span>Livro + workbook</span><span>80 + 57 páginas</span></div><Link className="btn btn-outline-dark" href="/me-sentir-leve/corpo-forte">Conhecer o conteúdo <span aria-hidden="true">↗</span></Link></div></article>
+ </div></div></section></>;
+}
