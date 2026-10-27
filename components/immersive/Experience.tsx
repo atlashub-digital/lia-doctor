@@ -5,7 +5,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
 import { Component, useEffect, useRef, useState, type CSSProperties, type ErrorInfo, type ReactNode } from 'react';
-import { books, canonicalImage, cropStyle, findRoom, hotspotStyle, rooms, sceneManifest, socialLabels, type RoomId } from '@/lib/immersive';
+import { books, canonicalImage, cropStyle, espelhoLibrary, findRoom, hotspotStyle, mirrorReflection, rooms, sceneManifest, socialLabels, type RoomId } from '@/lib/immersive';
 import { ChatPanel } from './ChatPanel';
 import { FocusDialog } from './FocusDialog';
 import './experience.css';
@@ -37,6 +37,7 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
   const [panel, setPanel] = useState<Panel>(null);
   const [query, setQuery] = useState('');
   const [ready, setReady] = useState(false);
+  const [focusBook, setFocusBook] = useState<string | null>(null);
   const roomHeading = useRef<HTMLHeadingElement>(null);
   const navOrigin = useRef(pathname);
   const canRender = enabled && webgl && !reduced && !failed;
@@ -57,7 +58,7 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
   useEffect(() => {
     if (navOrigin.current !== pathname) {
       navOrigin.current = pathname;
-      setTravelling(null); setPhase('idle');
+      setTravelling(null); setPhase('idle'); setFocusBook(null);
       if (selected) requestAnimationFrame(() => roomHeading.current?.focus());
     }
   }, [pathname, selected]);
@@ -89,7 +90,7 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
       </div>
 
       {canRender ? <div className={`lia-canvas ${activeScene ? 'is-active' : ''}`} aria-hidden="true">
-        <SceneBoundary onFailure={sceneFailed}><PortalScene room={current} travelling={travelling !== null} mobile={mobile} onReady={() => setReady(true)} onFailure={sceneFailed} onPhase={setPhase} onArrive={() => { if (travelling) { setPhase('room-ready'); router.push(`/experiencia/${travelling}`); } }} /></SceneBoundary>
+        <SceneBoundary onFailure={sceneFailed}><PortalScene room={current} travelling={travelling !== null} mobile={mobile} focusBook={focusBook} onReady={() => setReady(true)} onFailure={sceneFailed} onPhase={setPhase} onArrive={() => { if (travelling) { setPhase('room-ready'); router.push(`/experiencia/${travelling}`); } }} /></SceneBoundary>
       </div> : null}
 
       {!selected ? <>
@@ -120,6 +121,7 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
           <a href={selected.destination} className="lia-pill" {...(selected.destination.startsWith('https:') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{selected.cta} <span aria-hidden="true">→</span></a>
           <button className="lia-text-button" onClick={() => setChat(true)}>Conversar com a LIA <span aria-hidden="true">↗</span></button>
         </article>
+        {selected.id === 'espelho-meu' ? <LivingLibrary active={focusBook} onFocus={setFocusBook} mirrorShown={canRender && !mobile} /> : null}
         <nav className="lia-room-switcher" aria-label="Outras salas">{rooms.filter(room => room.id !== selected.id).map(room => <Link key={room.id} href={`/experiencia/${room.id}`}>{room.label} <span aria-hidden="true">↗</span></Link>)}</nav>
       </div> : null}
       {travelling ? <button className="lia-cancel" onClick={() => { setTravelling(null); setPhase('idle'); }}>Cancelar entrada</button> : null}
@@ -143,4 +145,19 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
       {panel === 'books' || panel === 'search' ? <div className="lia-dialog-links">{(panel === 'books' ? books.map(book => ({ title: book.title, href: book.href })) : searchItems).map(item => <Link key={item.href} href={item.href} onClick={() => setPanel(null)}>{item.title} <span aria-hidden="true">→</span></Link>)}{panel === 'search' && !searchItems.length ? <p role="status">Nenhum resultado. Experimente outra palavra.</p> : null}</div> : null}
     </FocusDialog> : null}
   </div>;
+}
+
+// Signature move of the Golden Room: focusing a volume here pulls the same volume out of the 3D niche.
+function LivingLibrary({ active, onFocus, mirrorShown }: { active: string | null; onFocus: (slug: string | null) => void; mirrorShown: boolean }) {
+  const book = espelhoLibrary.find(item => item.slug === active);
+  return <section className="lia-library" aria-labelledby="lia-library-heading" onMouseLeave={() => onFocus(null)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) onFocus(null); }}>
+    <p className={mirrorShown ? 'lia-sr' : 'lia-library-reflection'}>{mirrorReflection}</p>
+    <h3 id="lia-library-heading" className="lia-eyebrow">Biblioteca viva · Coleção EspelhoMeu</h3>
+    <ol className="lia-library-list">
+      {espelhoLibrary.map(item => <li key={item.slug}><Link href={item.href} aria-describedby={active === item.slug ? 'lia-library-label' : undefined} className={active === item.slug ? 'is-focused' : undefined} onMouseEnter={() => onFocus(item.slug)} onFocus={() => onFocus(item.slug)}><span className="lia-library-code">{item.code}</span>{item.title}</Link></li>)}
+    </ol>
+    <div id="lia-library-label" className="lia-library-label" aria-live="polite">
+      {book ? <><span className="lia-eyebrow">{book.eyebrow}</span><p>{book.description}</p><small>{book.details}</small></> : <small>Cada volume abre a sua página na coleção EspelhoMeu.</small>}
+    </div>
+  </section>;
 }

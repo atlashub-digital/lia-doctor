@@ -4,64 +4,20 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { RoundedBox, ContactShadows } from '@react-three/drei';
 import { gsap } from 'gsap';
 import { useEffect, useMemo, useRef } from 'react';
-import { Color, DataTexture, DoubleSide, Path, RepeatWrapping, RGBAFormat, Shape, SRGBColorSpace, TextureLoader, Vector3, type Group } from 'three';
+import { Color, DoubleSide, Shape, SRGBColorSpace, TextureLoader, Vector3, type Group } from 'three';
 import { sceneTexture, rooms, type RoomId } from '@/lib/immersive';
+import { EspelhoMeuRoom } from './rooms/EspelhoMeuRoom';
+import { archFrame, archPath, Chair, Plant, usePlaster } from './scene-kit';
 
-type Props = { room: RoomId | null; travelling: boolean; mobile: boolean; onReady: () => void; onFailure: () => void; onPhase: (phase: string) => void; onArrive: () => void };
+type Props = { room: RoomId | null; travelling: boolean; mobile: boolean; focusBook?: string | null; onReady: () => void; onFailure: () => void; onPhase: (phase: string) => void; onArrive: () => void };
 const centers = [-6.6, -2.2, 2.2, 6.6];
 const HOME = [0.4, 2.45, 11.7] as const;
 
-function archPath<T extends Shape | Path>(path: T, radius: number, base = 0, spring = 2.8): T {
-  path.moveTo(-radius, base); path.lineTo(radius, base); path.lineTo(radius, spring);
-  path.absarc(0, spring, radius, 0, Math.PI, false); path.lineTo(-radius, base);
-  return path;
-}
-function archFrame() {
-  const shape = archPath(new Shape(), 1.22, -0.03, 2.8) as Shape;
-  const hole = new Path();
-  hole.moveTo(-1.04, 0); hole.lineTo(-1.04, 2.8); hole.absarc(0, 2.8, 1.04, Math.PI, 0, true); hole.lineTo(1.04, 0); hole.lineTo(-1.04, 0);
-  shape.holes.push(hole);
-  return shape;
-}
-
-function Plant({ position, scale = 1 }: { position: [number, number, number]; scale?: number }) {
-  return <group position={position} scale={scale}>
-    <mesh castShadow position={[0, .29, 0]}><cylinderGeometry args={[.24, .18, .56, 16]} /><meshStandardMaterial color="#bc9f79" roughness={.94} /></mesh>
-    <mesh position={[0, .98, 0]}><cylinderGeometry args={[.018, .035, 1.1, 7]} /><meshStandardMaterial color="#63583c" /></mesh>
-    {[0, 1, 2, 3, 4, 5].map(i => <mesh castShadow key={i} position={[Math.sin(i * 2.4) * .16, .74 + i * .13, Math.cos(i * 2.4) * .16]} rotation={[.4, i * 2.4, -.6]} scale={[.18, .42, .075]}><sphereGeometry args={[1, 10, 8]} /><meshStandardMaterial color={i % 2 ? '#51684a' : '#344e35'} roughness={.8} /></mesh>)}
-  </group>;
-}
-
-function Chair({ position, color = '#e6d4b7' }: { position: [number, number, number]; color?: string }) {
-  return <group position={position}>
-    <RoundedBox args={[1.4, .3, 1.05]} radius={.13} position={[0, .48, 0]} castShadow receiveShadow><meshStandardMaterial color={color} roughness={.98} /></RoundedBox>
-    <RoundedBox args={[1.4, .7, .24]} radius={.12} position={[0, .9, -.43]} castShadow><meshStandardMaterial color={color} roughness={.98} /></RoundedBox>
-    {[-.6, .6].map(x => <RoundedBox key={x} args={[.22, .5, 1.05]} radius={.1} position={[x, .73, 0]} castShadow><meshStandardMaterial color={color} roughness={.96} /></RoundedBox>)}
-    {[-.5, .5].flatMap(x => [-.35, .35].map(z => <mesh key={`${x}:${z}`} position={[x, .15, z]}><cylinderGeometry args={[.035, .045, .3, 8]} /><meshStandardMaterial color="#6e5035" /></mesh>))}
-  </group>;
-}
-
-function Room({ index }: { index: number }) {
+function Room({ index, focusBook, active }: { index: number; focusBook: string | null; active: boolean }) {
   const room = rooms[index];
-  const frame = useMemo(archFrame, []);
+  const frame = useMemo(() => archFrame(), []);
   const doorShape = useMemo(() => archPath(new Shape(), 1.025), []);
   const door = useRef<Group>(null);
-  const { invalidate } = useThree();
-  // Photo fragments are set dressing at the back, never the navigable room itself.
-  const texture = useMemo(() => {
-    const source = new TextureLoader().load(sceneTexture, () => invalidate());
-    source.colorSpace = SRGBColorSpace;
-    source.repeat.set(290 / 1672, 160 / 941);
-    source.offset.set(15 / 1672, 1 - 460 / 941);
-    return source;
-  }, [room, invalidate]);
-  const plaster = useMemo(() => {
-    const pixels = new Uint8Array(64 * 64 * 4);
-    for (let i = 0; i < 64 * 64; i++) { const tone = 110 + ((i * 73 + (i % 17) * 29) % 55); pixels.set([tone, tone, tone, 255], i * 4); }
-    const map = new DataTexture(pixels, 64, 64, RGBAFormat); map.wrapS = map.wrapT = RepeatWrapping; map.repeat.set(6, 6); map.needsUpdate = true; return map;
-  }, []);
-  useEffect(() => () => texture.dispose(), [texture]);
-  useEffect(() => () => plaster.dispose(), [plaster]);
 
   return <group position={[centers[index], 0, 0]}>
     <mesh castShadow receiveShadow position={[0, 0, -.08]}>
@@ -73,6 +29,26 @@ function Room({ index }: { index: number }) {
       <mesh position={[1.025, 0, 0]} castShadow><extrudeGeometry args={[doorShape, { depth: .08, bevelEnabled: true, bevelSize: .015, bevelThickness: .015, bevelSegments: 2, curveSegments: 24 }]} /><meshStandardMaterial color={room.material} roughness={.8} /></mesh>
       <mesh position={[1.82, 1.6, .12]}><sphereGeometry args={[.045, 12, 8]} /><meshPhysicalMaterial color="#c2a46d" metalness={.7} roughness={.25} /></mesh>
     </group>
+    {room.id === 'espelho-meu' ? <EspelhoMeuRoom focusBook={focusBook} active={active} /> : <LegacyInterior index={index} />}
+  </group>;
+}
+
+// V1 procedural interior, kept unchanged for the three rooms that S3 has not reached yet.
+function LegacyInterior({ index }: { index: number }) {
+  const room = rooms[index];
+  const { invalidate } = useThree();
+  // Photo fragments are set dressing at the back, never the navigable room itself.
+  const texture = useMemo(() => {
+    const source = new TextureLoader().load(sceneTexture, () => invalidate());
+    source.colorSpace = SRGBColorSpace;
+    source.repeat.set(290 / 1672, 160 / 941);
+    source.offset.set(15 / 1672, 1 - 460 / 941);
+    return source;
+  }, [room, invalidate]);
+  const plaster = usePlaster();
+  useEffect(() => () => texture.dispose(), [texture]);
+
+  return <group>
     <mesh receiveShadow position={[0, 2.1, -10]}><boxGeometry args={[4.35, 4.2, .2]} /><meshStandardMaterial color={room.material} roughness={.95} bumpMap={plaster} bumpScale={.018} /></mesh>
     {[-2.15, 2.15].map(x => <mesh key={x} receiveShadow position={[x, 2.1, -5]}><boxGeometry args={[.15, 4.2, 10]} /><meshStandardMaterial color={index === 1 ? '#bdc5ac' : '#f1e3cd'} roughness={1} bumpMap={plaster} bumpScale={.015} /></mesh>)}
     <mesh receiveShadow position={[0, .015, -5]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[4.3, 10]} /><meshPhysicalMaterial color="#ead9bd" roughness={.7} metalness={.03} bumpMap={plaster} bumpScale={.012} /></mesh>
@@ -150,7 +126,7 @@ export default function PortalScene(props: Props) {
     <directionalLight castShadow position={[-5, 9, 7]} intensity={3.2} color="#ffe7bd" shadow-mapSize={[1024, 1024]} shadow-camera-left={-10} shadow-camera-right={10} shadow-camera-top={9} shadow-camera-bottom={-9} shadow-bias={-.0005} />
     <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -.02, -2]}><planeGeometry args={[30, 32]} /><meshPhysicalMaterial color="#e3cfac" roughness={.52} metalness={.03} /></mesh>
     {Array.from({ length: 14 }, (_, i) => <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, -.012, -12 + i * 1.3]}><planeGeometry args={[25, .012]} /><meshStandardMaterial color="#c7b592" /></mesh>)}
-    {rooms.map((room, i) => <Room key={room.id} index={i} />)}
+    {rooms.map((room, i) => <Room key={room.id} index={i} focusBook={props.focusBook ?? null} active={props.room === room.id && !props.travelling} />)}
     {[-4.4, 0, 4.4].map(x => <mesh key={x} receiveShadow castShadow position={[x, 2.1, -.01]}><boxGeometry args={[1.9, 4.2, .35]} /><meshStandardMaterial color="#deceb3" roughness={.95} /></mesh>)}
     <Plant position={[-5.7, 0, 1]} scale={1.5} /><Plant position={[6, 0, .3]} scale={1.7} />
     <Chair position={[-5, 0, 3.5]} />

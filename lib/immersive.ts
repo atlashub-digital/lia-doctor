@@ -1,4 +1,5 @@
 import manifest from '@/docs/immersive/02_SCENE_MANIFEST.json';
+import { espelho } from '@/lib/catalog';
 
 export const sceneManifest = manifest;
 export const canonicalImage = '/immersive/lia-canonical.png';
@@ -18,6 +19,10 @@ export const books = [
   { id: 'corpo-forte', title: 'Corpo Forte — Além da Balança', note: 'Com o workbook O Meu Corpo em Construção.', href: manifest.sales.corpo.page, cover: [1047, 575, 1168, 755] },
   { id: 'eu-sou-bela', title: 'Eu Sou Bela Do Meu Jeito', note: 'Expressar quem sou, com verdade e gentileza.', href: '/espelho-meu/eu-sou-bela-do-meu-jeito', cover: [1343, 576, 1468, 753] },
 ] as const;
+// Living library of the EspelhoMeu room: real catalogue volumes, internal routes, no invented covers.
+export const espelhoLibrary = espelho.map(book => ({ ...book, href: `/espelho-meu/${book.slug}` }));
+export type LibraryBookId = (typeof espelhoLibrary)[number]['slug'];
+export const mirrorReflection = 'Há espaço para me reconhecer.';
 export const socialLabels: Record<string, string> = { facebook: 'Facebook', youtube: 'YouTube', tiktok: 'TikTok', instagram: 'Instagram' };
 export function hotspotStyle(bounds: readonly number[]) {
   return { left: `${bounds[0] / 16.72}%`, top: `${bounds[1] / 9.41}%`, width: `${(bounds[2] - bounds[0]) / 16.72}%`, height: `${(bounds[3] - bounds[1]) / 9.41}%` };
