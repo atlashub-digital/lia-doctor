@@ -1,0 +1,212 @@
+{
+  "manifestVersion": "1.1.0",
+  "sourceOfTruth": {
+    "repository": "atlashub-digital/lia-doctor",
+    "previewRoute": "/experiencia",
+    "productionRoute": "/",
+    "image": "lia.doctor_mediterranean_wellness_haven.png",
+    "imageSize": {
+      "width": 1672,
+      "height": 941
+    },
+    "canva": "https://www.canva.com/d/vgQo-YbP5pcDuJ9"
+  },
+  "palette": {
+    "forest": "#153D31",
+    "ivory": "#FBF8F0",
+    "gold": "#B79A5B",
+    "espelho": "#B65E49",
+    "sage": "#DFE9DF"
+  },
+  "doors": [
+    {
+      "id": "espelho-meu",
+      "label": "EspelhoMeu",
+      "color": "pale-peach-rose",
+      "boundsPx": [
+        689,
+        79,
+        910,
+        532
+      ],
+      "focusPx": [
+        799,
+        270
+      ],
+      "target": "/espelho-meu"
+    },
+    {
+      "id": "me-sentir-leve",
+      "label": "Me Sentir Leve",
+      "color": "deep-forest-green",
+      "boundsPx": [
+        916,
+        79,
+        1131,
+        531
+      ],
+      "focusPx": [
+        1026,
+        277
+      ],
+      "target": "/me-sentir-leve"
+    },
+    {
+      "id": "corpo",
+      "label": "Corpo",
+      "color": "warm-ivory",
+      "boundsPx": [
+        1135,
+        79,
+        1368,
+        533
+      ],
+      "focusPx": [
+        1249,
+        270
+      ],
+      "target": "/corpo",
+      "newRoute": true
+    },
+    {
+      "id": "mente-e-calma",
+      "label": "Mente & Calma",
+      "color": "muted-sage",
+      "boundsPx": [
+        1372,
+        78,
+        1620,
+        531
+      ],
+      "focusPx": [
+        1488,
+        279
+      ],
+      "target": "/mente-e-calma",
+      "newRoute": true,
+      "phase": "coming-soon"
+    }
+  ],
+  "hotspots": [
+    {
+      "id": "lia",
+      "boundsPx": [
+        324,
+        151,
+        662,
+        458
+      ],
+      "action": "chat-toggle",
+      "ariaLabel": "Conversar com a LIA"
+    },
+    {
+      "id": "lia-chat",
+      "boundsPx": [
+        503,
+        466,
+        744,
+        583
+      ],
+      "action": "chat-toggle",
+      "ariaLabel": "Abrir conversa com a LIA"
+    },
+    {
+      "id": "mounjaro",
+      "boundsPx": [
+        748,
+        556,
+        1013,
+        760
+      ],
+      "href": "/me-sentir-leve/tomei-mounjaro-e-agora"
+    },
+    {
+      "id": "corpo-forte",
+      "boundsPx": [
+        1016,
+        556,
+        1302,
+        761
+      ],
+      "href": "/me-sentir-leve/corpo-forte"
+    },
+    {
+      "id": "eu-sou-bela",
+      "boundsPx": [
+        1306,
+        555,
+        1629,
+        760
+      ],
+      "href": "/espelho-meu/eu-sou-bela-do-meu-jeito"
+    },
+    {
+      "id": "community-top",
+      "boundsPx": [
+        1400,
+        12,
+        1638,
+        63
+      ],
+      "target": "whatsapp-community"
+    },
+    {
+      "id": "community-bottom",
+      "boundsPx": [
+        433,
+        802,
+        1619,
+        890
+      ],
+      "target": "whatsapp-community"
+    }
+  ],
+  "community": {
+    "url": "https://chat.whatsapp.com/FHzvr72KCiYCzlQ7klCTN3?s=sh&p=a&mlu=4&ilr=4"
+  },
+  "social": {
+    "facebook": "https://web.facebook.com/lia.levelab",
+    "youtube": "https://www.youtube.com/@LIA.Doctor",
+    "tiktok": "https://tiktok.com/@lia.doctor",
+    "instagram": "https://www.instagram.com/lia.levelab"
+  },
+  "sales": {
+    "mounjaro": {
+      "page": "/me-sentir-leve/tomei-mounjaro-e-agora",
+      "checkout": "https://pay.hotmart.com/S108189606N?checkoutMode=2"
+    },
+    "corpo": {
+      "page": "/me-sentir-leve/corpo-forte",
+      "hotmart": "pending-both-pdfs"
+    },
+    "espelho": {
+      "page": "/espelho-meu",
+      "externalFulfillment": "espelho.lia.doctor"
+    },
+    "forcaNaCaneta": "NAO_PUBLICAR"
+  },
+  "chat": {
+    "route": "/api/lia/chat",
+    "source": "needs port into lia-doctor from levelab-frontend; confirm LIA Core",
+    "proxy": "${LIA_API_URL}/api/v1/chat",
+    "serviceSecretServerOnly": "LIA_SERVICE_TOKEN",
+    "noFakeMock": true,
+    "voiceEnabled": false
+  },
+  "motion": {
+    "desktopMs": 1100,
+    "mobileMs": 350,
+    "maxParallaxPx": 9,
+    "maxTiltDeg": 1.8,
+    "keyboard": true,
+    "reducedMotion": true,
+    "noWebGLFallback": true
+  },
+  "release": {
+    "featureFlag": "NEXT_PUBLIC_LIA_IMMERSIVE_ENABLED",
+    "initialValue": false,
+    "previewFirst": true,
+    "preserveExistingSales": true,
+    "promoteHomeAfterVisualApproval": true
+  }
+}
