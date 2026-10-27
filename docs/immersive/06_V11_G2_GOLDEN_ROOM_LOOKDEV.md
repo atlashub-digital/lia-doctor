@@ -76,4 +76,21 @@ Proposta de teste A/B: mesma câmara de chegada, B vs. C contra a maquete, com a
 - Paridade fotográfica com a maquete (ver §2): não atingida.
 - Capas oficiais nos volumes: bloqueado pelo GO editorial.
 - Safari/WebKit, Firefox, iPhone/Android reais, GPU modesta, leitor de ecrã, WCAG manual, Web Vitals: não testados.
-- QA visual do 3D no URL de preview: depende do acesso autenticado ao preview (ver relatório no PR).
+
+## 8. QA do 3D no preview real (27/10, deployment `dpl_5uYHXvf3eQf9FNC9DusY1YLWZ7JH`, commit `5134a6a`)
+
+Acesso por link de partilha Vercel temporário (23 h), autorizado pela Direção só para este QA. A proteção do projeto não foi alterada e o link não está guardado no repositório. Chrome for Testing 156 com SwiftShader.
+
+| Verificação | Resultado |
+|---|---|
+| `/experiencia` desktop | `data-mode=webgl` (a variável escopada à branch está a funcionar) |
+| Travessia real pela porta EspelhoMeu | rota `/experiencia/espelho-meu` em ~2,2 s; `cameraZ = -2.8` |
+| Voltar / Avançar | `/experiencia` ↔ `/experiencia/espelho-meu` |
+| axe na sala (1440 com volume focado; 390) | 0 violações |
+| Mobile 390 por deep link | `data-mode=webgl`, sem overflow horizontal |
+| Fallback sem WebGL + reduced motion | `data-mode=html`, sala completa |
+| `/`, `/espelho-meu`, `/espelho-meu/21-dias-meu-melhor-reflexo`, `/me-sentir-leve`, `/corpo`, `/mente-e-calma`, `/privacidade` | 200 |
+| Checkout Hotmart em `/me-sentir-leve/tomei-mounjaro-e-agora` | ID `S108189606N` presente |
+| Erros de página, consola ou pedidos | nenhum |
+
+Capturas: `evidence/v11-g2/preview-desktop-lobby.png`, `preview-desktop-espelho-arrival.png`, `preview-desktop-espelho-focus-p03.png`, `preview-mobile-390-espelho.png`, `preview-fallback-reduced.png`. O render no preview coincide com o local.
