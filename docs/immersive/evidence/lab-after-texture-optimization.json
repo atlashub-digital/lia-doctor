@@ -1,0 +1,36 @@
+{
+  "base": "http://127.0.0.1:3107",
+  "collectedAt": "2026-10-27T02:22:30.222Z",
+  "conditions": "Windows; local production build; Chrome headless with software WebGL. Lab samples, not field Core Web Vitals.",
+  "metrics": [
+    {
+      "viewport": "1440x900",
+      "cpuThrottle": 1,
+      "network": "local unthrottled",
+      "lcpMs": 1392,
+      "cls": 0,
+      "maxInteractionDurationMs": null,
+      "lcpUrl": "http://127.0.0.1:3107/_next/image?url=%2Fimmersive%2Flia-canonical.png&w=1920&q=90",
+      "lcpTag": "IMG",
+      "transferredBytes": 901166,
+      "slowResources": [],
+      "mode": "webgl",
+      "inpNote": "maxInteractionDurationMs is a diagnostic event sample, not a validated INP percentile; null means no qualifying event timing entry."
+    },
+    {
+      "viewport": "390x844",
+      "cpuThrottle": 4,
+      "network": "8Mbps down / 2Mbps up / 80ms RTT",
+      "lcpMs": 2520,
+      "cls": 0,
+      "maxInteractionDurationMs": null,
+      "lcpUrl": "http://127.0.0.1:3107/_next/image?url=%2Fimmersive%2Flia-cutout.png&w=640&q=75",
+      "lcpTag": "IMG",
+      "transferredBytes": 952763,
+      "slowResources": [],
+      "mode": "webgl",
+      "inpNote": "maxInteractionDurationMs is a diagnostic event sample, not a validated INP percentile; null means no qualifying event timing entry."
+    }
+  ],
+  "browsers": []
+}

@@ -1,0 +1,423 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\node_modules\\@playwright\\test\\cli.js",
+      "test"
+    ],
+    "configFile": "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\playwright.config.ts",
+    "rootDir": "C:/Users/conta/Documents/ChatGPT/MTX Farma/lia-doctor-immersive-v1/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/conta/Documents/ChatGPT/MTX Farma/lia-doctor-immersive-v1/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/conta/Documents/ChatGPT/MTX Farma/lia-doctor-immersive-v1/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 150000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\tests",
+        "snapshotDir": "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\tests",
+        "testIgnore": [],
+        "testMatch": "**/*.spec.ts",
+        "timeout": 150000,
+        "use": {
+          "baseURL": "http://127.0.0.1:3107",
+          "channel": "chrome",
+          "headless": true,
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "video": "on",
+          "trace": "retain-on-failure",
+          "launchOptions": {
+            "args": [
+              "--use-angle=swiftshader",
+              "--enable-unsafe-swiftshader"
+            ]
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run start -- --hostname 127.0.0.1 --port 3107",
+      "url": "http://127.0.0.1:3107/experiencia",
+      "reuseExistingServer": true,
+      "timeout": 60000
+    }
+  },
+  "suites": [
+    {
+      "title": "experience.spec.ts",
+      "file": "experience.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "desktop canonical lobby, real camera journeys through all arches, history and direct access",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 92889,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T02:18:06.057Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\test-results\\experience-desktop-canonic-f5dc2-s-history-and-direct-access\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "116f6b4a9defd92cdbb9-c2866c0dbe30a4546e6b",
+          "file": "experience.spec.ts",
+          "line": 5,
+          "column": 5
+        },
+        {
+          "title": "mobile composition, touch targets, all canonical book routes, no overflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10420,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T02:19:42.046Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\test-results\\experience-mobile-composit-23723-cal-book-routes-no-overflow\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "116f6b4a9defd92cdbb9-918f6b9984e2476bab70",
+          "file": "experience.spec.ts",
+          "line": 28,
+          "column": 5
+        },
+        {
+          "title": "HTML fallback, reduced motion, deep links and commercial pages remain available",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3524,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T02:19:52.586Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\test-results\\experience-HTML-fallback-r-d1043-cial-pages-remain-available\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "116f6b4a9defd92cdbb9-aea6c6f03c5cfea5b392",
+          "file": "experience.spec.ts",
+          "line": 43,
+          "column": 5
+        },
+        {
+          "title": "chat real unavailable state, retry, no demo, Escape and focus restoration",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11396,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T02:19:56.213Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\test-results\\experience-chat-real-unava-3e6bc-scape-and-focus-restoration\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "116f6b4a9defd92cdbb9-441bacd3194bff1f908a",
+          "file": "experience.spec.ts",
+          "line": 54,
+          "column": 5
+        },
+        {
+          "title": "chat controlled 200/429/502 response rendering and cancellation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 36376,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T02:20:07.676Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\test-results\\experience-chat-controlled-77d7e--rendering-and-cancellation\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "116f6b4a9defd92cdbb9-d1170c484c36af6af550",
+          "file": "experience.spec.ts",
+          "line": 69,
+          "column": 5
+        },
+        {
+          "title": "keyboard, search, actual links and automated accessibility desktop/mobile",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 40497,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T02:20:44.152Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\test-results\\experience-keyboard-search-0d9ca-ccessibility-desktop-mobile\\video-1.webm"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\test-results\\experience-keyboard-search-0d9ca-ccessibility-desktop-mobile\\video-2.webm"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\test-results\\experience-keyboard-search-0d9ca-ccessibility-desktop-mobile\\video.webm"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\test-results\\experience-keyboard-search-0d9ca-ccessibility-desktop-mobile\\video-3.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "116f6b4a9defd92cdbb9-dd739fc4d83f14d18810",
+          "file": "experience.spec.ts",
+          "line": 84,
+          "column": 5
+        },
+        {
+          "title": "768/1920/360 layouts have no overflow; WebGL context loss falls back without losing the room",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12743,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T02:21:24.774Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Users\\conta\\Documents\\ChatGPT\\MTX Farma\\lia-doctor-immersive-v1\\test-results\\experience-768-1920-360-la-6fa95-ack-without-losing-the-room\\video.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "116f6b4a9defd92cdbb9-c0ffed6628762f7b8297",
+          "file": "experience.spec.ts",
+          "line": 96,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-27T02:18:01.980Z",
+    "duration": 227671.791,
+    "expected": 7,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "if [ \"$VERCEL_ENV\" = \"preview\" ] && [ \"$VERCEL_GIT_COMMIT_REF\" = \"feat/lia-immersive-v1\" ]; then export NEXT_PUBLIC_LIA_IMMERSIVE_ENABLED=${NEXT_PUBLIC_LIA_IMMERSIVE_ENABLED:-true}; fi; npm run build"
+}
