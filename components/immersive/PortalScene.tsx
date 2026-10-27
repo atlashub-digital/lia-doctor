@@ -1,10 +1,10 @@
 'use client';
 
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { RoundedBox, ContactShadows } from '@react-three/drei';
 import { gsap } from 'gsap';
 import { useEffect, useMemo, useRef } from 'react';
-import { Color, DoubleSide, Shape, SRGBColorSpace, TextureLoader, Vector3, type Group } from 'three';
+import { Color, DoubleSide, Shape, SRGBColorSpace, TextureLoader, Vector3, type AmbientLight, type DirectionalLight, type Group, type HemisphereLight } from 'three';
 import { sceneTexture, rooms, type RoomId } from '@/lib/immersive';
 import { EspelhoMeuRoom } from './rooms/EspelhoMeuRoom';
 import { archFrame, archPath, Chair, Plant, usePlaster } from './scene-kit';
@@ -13,7 +13,7 @@ type Props = { room: RoomId | null; travelling: boolean; mobile: boolean; focusB
 const centers = [-6.6, -2.2, 2.2, 6.6];
 const HOME = [0.4, 2.45, 11.7] as const;
 
-function Room({ index, focusBook, active }: { index: number; focusBook: string | null; active: boolean }) {
+function Room({ index, focusBook, active, mobile }: { index: number; focusBook: string | null; active: boolean; mobile: boolean }) {
   const room = rooms[index];
   const frame = useMemo(() => archFrame(), []);
   const doorShape = useMemo(() => archPath(new Shape(), 1.025), []);
@@ -29,7 +29,7 @@ function Room({ index, focusBook, active }: { index: number; focusBook: string |
       <mesh position={[1.025, 0, 0]} castShadow><extrudeGeometry args={[doorShape, { depth: .08, bevelEnabled: true, bevelSize: .015, bevelThickness: .015, bevelSegments: 2, curveSegments: 24 }]} /><meshStandardMaterial color={room.material} roughness={.8} /></mesh>
       <mesh position={[1.82, 1.6, .12]}><sphereGeometry args={[.045, 12, 8]} /><meshPhysicalMaterial color="#c2a46d" metalness={.7} roughness={.25} /></mesh>
     </group>
-    {room.id === 'espelho-meu' ? <EspelhoMeuRoom focusBook={focusBook} active={active} /> : <LegacyInterior index={index} />}
+    {room.id === 'espelho-meu' ? <EspelhoMeuRoom focusBook={focusBook} active={active} mobile={mobile} /> : <LegacyInterior index={index} />}
   </group>;
 }
 
@@ -120,13 +120,31 @@ function CameraJourney(props: Props) {
   return null;
 }
 
+// Lobby lighting, dimmed only while the camera is inside the EspelhoMeu room (interior lit by its own windows).
+// The blend follows camera depth, so crossing the threshold reads as walking from the terrace into shade.
+const LOBBY = { ambient: .8, hemisphere: 1.6, sun: 3.2 };
+const INTERIOR = { ambient: .06, hemisphere: .22, sun: 1 };
+function LightRig({ room }: { room: RoomId | null }) {
+  const ambient = useRef<AmbientLight>(null), hemisphere = useRef<HemisphereLight>(null), sun = useRef<DirectionalLight>(null);
+  useFrame(({ camera }) => {
+    const inside = room === 'espelho-meu' ? Math.min(1, Math.max(0, -camera.position.z / 2.8)) : 0;
+    const blend = (key: keyof typeof LOBBY) => LOBBY[key] + (INTERIOR[key] - LOBBY[key]) * inside;
+    if (ambient.current) ambient.current.intensity = blend('ambient');
+    if (hemisphere.current) hemisphere.current.intensity = blend('hemisphere');
+    if (sun.current) sun.current.intensity = blend('sun');
+  });
+  return <>
+    <ambientLight ref={ambient} intensity={LOBBY.ambient} color="#fff3dd" /><hemisphereLight ref={hemisphere} args={['#fff4df', '#938d6e', LOBBY.hemisphere]} />
+    <directionalLight ref={sun} castShadow position={[-5, 9, 7]} intensity={LOBBY.sun} color="#ffe7bd" shadow-mapSize={[1024, 1024]} shadow-camera-left={-10} shadow-camera-right={10} shadow-camera-top={9} shadow-camera-bottom={-9} shadow-bias={-.0005} />
+  </>;
+}
+
 export default function PortalScene(props: Props) {
   return <Canvas frameloop="demand" dpr={[1, props.mobile ? 1.25 : 1.5]} shadows camera={{ position: [...HOME], fov: 43, near: .08, far: 45 }} gl={{ antialias: true, alpha: false, powerPreference: 'default' }} fallback={<span />} onCreated={({ gl }) => { gl.setClearColor(new Color('#e6d7bd')); }}>
-    <ambientLight intensity={.8} color="#fff3dd" /><hemisphereLight args={['#fff4df', '#938d6e', 1.6]} />
-    <directionalLight castShadow position={[-5, 9, 7]} intensity={3.2} color="#ffe7bd" shadow-mapSize={[1024, 1024]} shadow-camera-left={-10} shadow-camera-right={10} shadow-camera-top={9} shadow-camera-bottom={-9} shadow-bias={-.0005} />
+    <LightRig room={props.room} />
     <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -.02, -2]}><planeGeometry args={[30, 32]} /><meshPhysicalMaterial color="#e3cfac" roughness={.52} metalness={.03} /></mesh>
     {Array.from({ length: 14 }, (_, i) => <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, -.012, -12 + i * 1.3]}><planeGeometry args={[25, .012]} /><meshStandardMaterial color="#c7b592" /></mesh>)}
-    {rooms.map((room, i) => <Room key={room.id} index={i} focusBook={props.focusBook ?? null} active={props.room === room.id && !props.travelling} />)}
+    {rooms.map((room, i) => <Room key={room.id} index={i} focusBook={props.focusBook ?? null} active={props.room === room.id && !props.travelling} mobile={props.mobile} />)}
     {[-4.4, 0, 4.4].map(x => <mesh key={x} receiveShadow castShadow position={[x, 2.1, -.01]}><boxGeometry args={[1.9, 4.2, .35]} /><meshStandardMaterial color="#deceb3" roughness={.95} /></mesh>)}
     <Plant position={[-5.7, 0, 1]} scale={1.5} /><Plant position={[6, 0, .3]} scale={1.7} />
     <Chair position={[-5, 0, 3.5]} />

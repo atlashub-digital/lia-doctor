@@ -168,7 +168,7 @@ body:has(.lia-experience) > .site-header, body:has(.lia-experience) > .site-foot
 .lia-library-code { font:600 10px/1 'DM Sans',Arial,sans-serif; letter-spacing:.12em; color:#8a5a43 }
 .lia-library-label { height:112px; overflow:hidden; border-top:1px solid #e6d6bd; padding-top:10px; font-size:12px; line-height:1.6; color:#465348 }
 .lia-library-label p { margin:4px 0 }
-.lia-mirror-phrase p { margin:0; width:max-content; max-width:150px; text-align:center; font:italic 400 15px/1.35 'Playfair Display',Georgia,serif; color:#6f3e2a; text-shadow:0 0 12px #fff6ec; animation:lia-mirror-in .9s .3s both ease-out }
+.lia-mirror-phrase p { margin:0; width:max-content; max-width:150px; text-align:center; font:italic 400 15px/1.35 'Playfair Display',Georgia,serif; color:#4d2819; text-shadow:0 0 6px #fff4e6,0 0 18px #fff4e6; animation:lia-mirror-in .9s .3s both ease-out }
 @keyframes lia-mirror-in { from { opacity:0; transform:translateY(4px) } to { opacity:.92; transform:none } }
 .lia-room-fallback .lia-library { background:#fbf8f0f5 }
 @media(max-width:1050px) and (min-width:768px) { .lia-library { width:min(300px,38%); padding:16px } .lia-library-list a { font-size:12px } }
