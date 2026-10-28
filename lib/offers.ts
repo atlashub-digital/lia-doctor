@@ -24,6 +24,7 @@ export type Offer = Book & {
   includes: string[];
   commerce: Commerce;
   cover: Cover;
+  banner: string;
 };
 
 const pending: Commerce = { status: 'pending', reason: 'Associação Hotmart pendente de confirmação pela Direção.' };
@@ -43,7 +44,10 @@ const commerceByCode: Record<string, Commerce> = {
     checkout: 'https://pay.hotmart.com/A108182228Y',
     hotlink: 'https://go.hotmart.com/A108182228Y?dp=1',
     widget: { enabled: false },
-  },
+  },  '02': { status: 'live', checkout: 'https://pay.hotmart.com/A108182278G', hotlink: 'https://go.hotmart.com/A108182278G?dp=1', widget: { enabled: false } },
+  '03': { status: 'live', checkout: 'https://pay.hotmart.com/E108183347V', hotlink: 'https://go.hotmart.com/E108183347V?dp=1', widget: { enabled: false } },
+  '04': { status: 'live', checkout: 'https://pay.hotmart.com/D108183354F', hotlink: 'https://go.hotmart.com/D108183354F?dp=1', widget: { enabled: false } },
+  '05': { status: 'live', checkout: 'https://pay.hotmart.com/E108186873J', hotlink: 'https://go.hotmart.com/E108186873J?dp=1', widget: { enabled: false } },
 };
 
 export const espelhoOffers: Offer[] = espelho.map(book => ({
@@ -53,6 +57,7 @@ export const espelhoOffers: Offer[] = espelho.map(book => ({
   includes: includesByCode[book.code] ?? [book.details],
   commerce: commerceByCode[book.code] ?? pending,
   cover: { status: 'pending-editorial' },
+  banner: `/banners/espelho-p${book.code}.png`,
 }));
 
 export function findOffer(slug?: string | null) {
