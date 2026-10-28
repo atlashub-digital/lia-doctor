@@ -72,4 +72,29 @@ Estados do livro (atributo `data-book-state` no canvas, usado por testes e pelos
 4. **Entrada**: é um movimento de câmara 2D sobre a maquete achatada. A maquete tem UI desenhada (navegação, botões "Conhecer", balão de chat) que aqui não é clicável. Uma entrada verdadeiramente em camadas precisa de clean plate + recorte alfa da LIA alinhado (`hero-depth.md`).
 5. **`/espelho-meu` público**: ao fazer merge, P02–P05 passam a mostrar "em preparação" em vez de enviar para `espelho.lia.doctor`. Isto é a decisão comercial pedida, mas é uma mudança visível em produção no merge.
 6. **Desempenho em hardware real**: medido só em SwiftShader. Falta GPU real, iPhone/Android, Safari/Firefox, Web Vitals, leitor de ecrã e WCAG manual.
-7. **Preview Vercel desta branch**: a variável de 3D está limitada à branch V1.1. Para ver o 3D no preview V1.2 é preciso uma variável igual limitada a `feat/lia-immersive-v12-livraria` (não criada; pedir GO).
+
+## 5. QA do 3D no preview real (28/10, deployment `dpl_C3sCh2jfWbWSDztBv8whUJoCMVsn`, commit `e05b212`)
+
+Por GO da Direção: variável Vercel `NEXT_PUBLIC_LIA_IMMERSIVE_ENABLED=true`, alvo Preview, `gitBranch = feat/lia-immersive-v12-livraria` (não ativa em Production nem noutras branches; `vercel.json` inalterado). Redeploy do preview para aplicar a variável. Rollback: apagar a variável e fazer redeploy.
+Acesso por link de partilha Vercel temporário (23 h), sem alterar a proteção do projeto; o link não está no repositório. Chrome for Testing 156 com SwiftShader.
+
+| Verificação | Resultado |
+|---|---|
+| `/experiencia` | `data-mode=webgl` |
+| Travessia real pela porta EspelhoMeu | `cameraZ = -2.8` |
+| Seleção P01 pela lista | livro apresentado (estado `7-dias-para-me-escolher`) em ~2 s incluindo o Playwright; ficha visível |
+| CTA | `https://pay.hotmart.com/A108182228Y` |
+| Links para `espelho.lia.doctor` | 0 |
+| Escape | volta a `/experiencia/espelho-meu`, livro na estante, foco no volume |
+| Avançar / refresh / Voltar | reabre a ficha / mantém a seleção / regressa |
+| Clique na lombada 3D | abriu P01 |
+| Mobile 390 por deep link | WebGL, sem overflow |
+| axe da ficha (1440 e 390) | 0 violações |
+| P02 | sem botão de compra |
+| Fallback sem WebGL + reduced motion | `data-mode=html`, ficha completa |
+| `/entrada` | "Saltar" foca o CTA; reduced motion mostra o CTA; `noindex, nofollow` |
+| `/`, `/espelho-meu`, P01, P02, `/me-sentir-leve`, `/corpo`, `/mente-e-calma`, `/privacidade` | 200; nenhum contém `espelho.lia.doctor` |
+| Checkouts | P01 na página pública; Mounjaro `S108189606N` intacto |
+| Erros de página, consola ou pedidos | nenhum |
+
+Capturas: `evidence/v12/preview-library-shelf.png`, `preview-p01-sheet.png`, `preview-3d-click.png`, `preview-mobile-p01.png`, `preview-entrada-approach.png`, `preview-entrada-arrival.png`.
