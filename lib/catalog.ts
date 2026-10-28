@@ -10,28 +10,28 @@ export type Book = {
 export const espelho: Book[] = [
   {
     slug:'7-dias-para-me-escolher', code:'01',title:'7 Dias Para Me Escolher',
-    eyebrow:'O primeiro passo',description:'Sete convites para reconhecer, refletir e escolher no seu ritmo.',
-    details:'Leitura, jornada de sete dias e caderno de atividades.'
+    eyebrow:'O primeiro passo',description:'Sete encontros curtos para reconhecer pequenas escolhas e abrir espaço para o que faz sentido para você.',
+    details:'Inclui o eBook e workbook de reflexão. Educativo, para maiores de 18 anos; não substitui terapia.'
   },
   {
     slug:'eu-sou-bela-do-meu-jeito',code:'02',title:'Eu Sou Bela — Do Meu Jeito',
-    eyebrow:'Expressão e identidade',description:'Uma leitura sobre a liberdade de se reconhecer do seu jeito.',
-    details:'Uma experiência editorial sobre beleza e expressão pessoal.'
+    eyebrow:'Expressão e identidade',description:'Explore beleza, expressão pessoal e presença sem transformar a aparência em obrigação.',
+    details:'Sete capítulos e Caderno da Minha Assinatura com fichas e cartões; não é método terapêutico.'
   },
   {
     slug:'21-dias-meu-melhor-reflexo',code:'03',title:'21 Dias — Meu Melhor Reflexo',
-    eyebrow:'Ver · experimentar · evoluir',description:'Vinte e um encontros para observar, experimentar e continuar.',
-    details:'Três atos, caderno de atividades e cartões de reflexão.'
+    eyebrow:'Ver · experimentar · evoluir',description:'Vinte e um encontros em três momentos: observar, experimentar e continuar ao seu ritmo.',
+    details:'Inclui livro, Caderno Meu Melhor Reflexo e cartões de reflexão. Atividades opcionais.'
   },
   {
     slug:'recomecar-depois-dos-40',code:'04',title:'Recomeçar Depois dos 40',
-    eyebrow:'Novos capítulos',description:'Para quem deseja olhar para novos começos com mais gentileza.',
-    details:'Leitura de reflexão sobre escolhas e possibilidades.'
+    eyebrow:'Novos capítulos',description:'Sete capítulos sobre tempo, história pessoal, curiosidade, papéis e relações.',
+    details:'Inclui livro, Mapa de Novos Capítulos e cartões de reflexão. Conteúdo educativo.'
   },
   {
     slug:'diario-de-amor-proprio',code:'05',title:'Diário de Amor-Próprio',
-    eyebrow:'Um encontro consigo',description:'Um espaço para registar pensamentos, reencontros e pequenas escolhas.',
-    details:'Diário e exercícios editoriais para acompanhar a leitura.'
+    eyebrow:'Um encontro consigo',description:'Trinta encontros de escrita sobre presença, memórias, corpo, escolhas e continuidade.',
+    details:'Inclui diário, caderno complementar e cartões. Não substitui psicoterapia.'
   }
 ];
 export const hotmartMounjaro = 'https://pay.hotmart.com/S108189606N?checkoutMode=2';

@@ -26,24 +26,21 @@ export type Offer = Book & {
   cover: Cover;
 };
 
-const pending: Commerce = { status: 'pending', reason: 'Associação Hotmart pendente de confirmação pela Direção.' };
-
-// Materials, restated item by item from each volume's catalogue "details" sentence (no new claims).
+const pending: Commerce = { status: 'pending', reason: 'A validar.' };
 const includesByCode: Record<string, string[]> = {
-  '01': ['Leitura', 'Jornada de sete dias', 'Caderno de atividades'],
-  '02': ['Experiência editorial sobre beleza e expressão pessoal'],
-  '03': ['Três atos', 'Caderno de atividades', 'Cartões de reflexão'],
-  '04': ['Leitura de reflexão sobre escolhas e possibilidades'],
-  '05': ['Diário', 'Exercícios editoriais para acompanhar a leitura'],
+ '01': ['eBook e workbook complementar de reflexão'],
+ '02': ['Livro em sete capítulos', 'Caderno da Minha Assinatura e cartões de reflexão'],
+ '03': ['Livro com 21 encontros', 'Caderno Meu Melhor Reflexo', 'Cartões de reflexão'],
+ '04': ['Livro com sete capítulos', 'Mapa de Novos Capítulos e cartões'],
+ '05': ['Diário de 30 encontros', 'Caderno complementar e cartões'],
 };
-
+const live = (id: string): Commerce => ({ status: 'live', checkout: 'https://pay.hotmart.com/' + id, hotlink: 'https://go.hotmart.com/' + id + '?dp=1', widget: { enabled: false } });
 const commerceByCode: Record<string, Commerce> = {
-  '01': {
-    status: 'live',
-    checkout: 'https://pay.hotmart.com/A108182228Y',
-    hotlink: 'https://go.hotmart.com/A108182228Y?dp=1',
-    widget: { enabled: false },
-  },
+ '01': live('A108182228Y'),
+ '02': live('A108182278G'),
+ '03': live('E108183347V'),
+ '04': live('D108183354F'),
+ '05': live('E108186873J'),
 };
 
 export const espelhoOffers: Offer[] = espelho.map(book => ({

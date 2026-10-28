@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { gsap } from 'gsap';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { canonicalImage } from '@/lib/immersive';
@@ -16,7 +17,8 @@ const SHOTS: Record<'desktop' | 'mobile', Shot[]> = {
 };
 const frame = ({ scale, fx, fy }: Shot) => ({ scale, xPercent: -50 - (fx - .5) * 100 * scale, yPercent: -50 - (fy - .5) * 100 * scale });
 
-export function CinematicEntry() {
+export function CinematicEntry({autoEnter=false}:{autoEnter?:boolean}) {
+ const router=useRouter();
   const root = useRef<HTMLDivElement>(null);
   const camera = useRef<HTMLDivElement>(null);
   const timeline = useRef<gsap.core.Timeline | null>(null);
@@ -35,11 +37,12 @@ export function CinematicEntry() {
         gsap.set('.entry-curtain', { autoAlpha: 0 });
         gsap.set('.entry-arrival', { autoAlpha: 1, y: 0 });
         setDone(true);
+        if(autoEnter) router.replace('/experiencia');
         return;
       }
       gsap.set(lens, { ...frame(shots[0]), filter: 'blur(7px) brightness(.72)' });
       gsap.set('.entry-arrival', { autoAlpha: 0, y: 14 });
-      const tl = gsap.timeline({ onComplete: () => setDone(true) });
+      const tl = gsap.timeline({ onComplete: () => { setDone(true); if(autoEnter) router.replace('/experiencia'); } });
       tl.to('.entry-line', { autoAlpha: 1, y: 0, duration: .7, ease: 'power2.out' })
         .to('.entry-line', { autoAlpha: 0, duration: .45, ease: 'power1.in' }, '+=.55')
         .to('.entry-curtain', { autoAlpha: 0, duration: 1.1, ease: 'power2.inOut' }, '-=.2')
@@ -55,7 +58,8 @@ export function CinematicEntry() {
   function skip() {
     timeline.current?.progress(1);
     setDone(true);
-    requestAnimationFrame(() => cta.current?.focus());
+    if(autoEnter) router.replace('/experiencia');
+    else requestAnimationFrame(() => cta.current?.focus());
   }
 
   return <div ref={root} className={`entry ${done ? 'is-done' : ''}`}>

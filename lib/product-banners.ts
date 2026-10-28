@@ -1,0 +1,1 @@
+export const productBanners = {p01:'/banners/p01.png',p02:'/banners/p02.png',p03:'/banners/p03.png',p04:'/banners/p04.png',p05:'/banners/p05.png',msl001:'/banners/msl001.png',msl002:'/banners/msl002.png'} as const;
