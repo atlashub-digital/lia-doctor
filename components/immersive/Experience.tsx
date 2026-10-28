@@ -7,6 +7,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Component, useEffect, useRef, useState, type CSSProperties, type ErrorInfo, type ReactNode } from 'react';
 import { books, canonicalImage, cropStyle, findRoom, hotspotStyle, mirrorReflection, rooms, sceneManifest, type RoomId } from '@/lib/immersive';
 import { espelhoOffers, findOffer, type Offer } from '@/lib/offers';
+import { bannerForEspelho } from '@/lib/editorial-banners';
+import { HotmartCheckout } from '@/components/HotmartCheckout';
+import Image from 'next/image';
 import { ChatPanel } from './ChatPanel';
 import { FocusDialog } from './FocusDialog';
 import { SocialLinks } from '@/components/SocialLinks';
@@ -151,7 +154,7 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
           <button className="lia-text-button" onClick={() => setChat(true)}>Conversar com a LIA <span aria-hidden="true">↗</span></button>
         </article>
         {selected.id === 'espelho-meu' ? <LivingLibrary active={focusBook} selectedSlug={roomBook?.slug ?? null} onFocus={setFocusBook} onOpen={openBook} mirrorShown={canRender && !mobile} /> : null}
-        {roomBook ? <BookSheet key={roomBook.slug} offer={roomBook} headingRef={sheetHeading} onClose={closeBook} showCover={!canRender} /> : null}
+        {roomBook ? <BookSheet key={roomBook.slug} offer={roomBook} headingRef={sheetHeading} onClose={closeBook} showCover={!canRender || mobile} /> : null}
         <nav className="lia-room-switcher" aria-label="Outras salas">{rooms.filter(room => room.id !== selected.id).map(room => <Link key={room.id} href={`/experiencia/${room.id}`}>{room.label} <span aria-hidden="true">↗</span></Link>)}</nav>
       </div> : null}
       {travelling ? <button className="lia-cancel" onClick={() => { setTravelling(null); setPhase('idle'); }}>Cancelar entrada</button> : null}
@@ -212,13 +215,12 @@ function BookSheet({ offer, headingRef, onClose, showCover }: { offer: Offer; he
   const live = offer.commerce.status === 'live' ? offer.commerce : null;
   return <section className="lia-book-sheet" role="dialog" aria-modal="false" aria-labelledby="lia-book-title">
     <button className="lia-book-close" onClick={onClose} aria-label="Fechar a ficha e devolver o livro à estante"><span aria-hidden="true">×</span></button>
-    {showCover ? <figure className="lia-book-plate" aria-label={`Volume ${offer.code}: capa oficial em homologação`}>
-      <span>EspelhoMeu Editions</span><strong>{offer.code}</strong><em>{offer.title}</em><small>Capa oficial em homologação</small>
-    </figure> : null}
+    {/* Without the 3D book (no WebGL, reduced motion, mobile layout), the official banner carries the cover art. */}
+    {showCover ? <Image className="lia-book-banner" src={bannerForEspelho(offer.slug)} alt={`Banner oficial: ${offer.title}`} width={2172} height={724} sizes="(max-width: 767px) 92vw, 420px" /> : null}
     <span className="lia-eyebrow">{offer.collection} · Volume {offer.code}</span>
     <h2 id="lia-book-title" ref={headingRef} tabIndex={-1}>{offer.title}</h2>
     <p className="lia-book-kicker">{offer.eyebrow}</p>
-    <p className="lia-book-synopsis">{offer.description}</p>
+    <p className="lia-book-synopsis">{offer.synopsis}</p>
     <h3 className="lia-eyebrow">Inclui</h3>
     <ul className="lia-book-includes">{offer.includes.map(item => <li key={item}>{item}</li>)}</ul>
     <dl className="lia-book-facts">
@@ -226,8 +228,9 @@ function BookSheet({ offer, headingRef, onClose, showCover }: { offer: Offer; he
       <div><dt>Referência</dt><dd>{offer.productCode}</dd></div>
       <div><dt>Compra e entrega</dt><dd>{live ? 'Hotmart' : 'Em preparação nesta loja'}</dd></div>
     </dl>
+    <p className="lia-book-notice">{offer.notice}</p>
     {live ? <>
-      <a className="lia-pill lia-book-buy" href={live.checkout} rel="noopener noreferrer">Comprar na Hotmart <span aria-hidden="true">↗</span></a>
+      <HotmartCheckout label="Comprar na Hotmart" checkout={live.checkout} className="lia-pill lia-book-buy" fallback={false} />
       <p className="lia-book-fineprint">Pagamento seguro e entrega feitos pela Hotmart.</p>
     </> : <p className="lia-book-pending" role="note">A compra deste volume nesta loja está em preparação.</p>}
     <button className="lia-text-button lia-book-return" onClick={onClose}>Devolver à estante</button>

@@ -35,3 +35,5 @@ export const espelho: Book[] = [
   }
 ];
 export const hotmartMounjaro = 'https://pay.hotmart.com/S108189606N?checkoutMode=2';
+// Corpo Forte — Além da Balança (eBook + workbook), checkout supplied by the Direction on 28/10/2026.
+export const corpoForteCheckout = 'https://pay.hotmart.com/K108189729W';
