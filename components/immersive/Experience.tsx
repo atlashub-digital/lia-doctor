@@ -127,7 +127,7 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
 
       {!selected ? <>
         <nav className="lia-photo-nav" aria-label="Navegação da experiência">
-          <Link className="lia-hotspot" style={hotspotStyle([670, 10, 739, 64])} href="/experiencia"><span className="lia-sr">Início</span></Link>
+          <Link className="lia-hotspot" style={hotspotStyle([670, 10, 739, 64])} href="/"><span className="lia-sr">Início</span></Link>
           <button className="lia-hotspot" style={hotspotStyle([757, 10, 830, 64])} onClick={() => setPanel('about')}><span className="lia-sr">Sobre a LIA</span></button>
           <button className="lia-hotspot" style={hotspotStyle([842, 10, 974, 64])} onClick={() => setPanel('areas')}><span className="lia-sr">Nossas áreas</span></button>
           <button className="lia-hotspot" style={hotspotStyle([993, 10, 1088, 64])} onClick={() => setPanel('books')}><span className="lia-sr">Produtos</span></button>
@@ -144,7 +144,7 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
       </> : null}
 
       {selected ? <div className={`lia-room-overlay ${!canRender ? 'lia-room-fallback' : ''}`} style={{ '--room-color': selected.material } as CSSProperties}>
-        <Link href="/experiencia" className="lia-back">← Voltar ao lobby</Link>
+        <Link href="/" className="lia-back">← Voltar ao átrio</Link>
         <article className="lia-room-copy">
           <span className="lia-eyebrow">O UNIVERSO LIA / {selected.id === 'mente-e-calma' ? 'EM BREVE' : 'UM ESPAÇO SEU'}</span>
           <h2 ref={roomHeading} tabIndex={-1}>{selected.label}</h2>
@@ -161,14 +161,14 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
     </div>
 
     {!selected ? <div className="lia-mobile-content">
-      <header className="lia-mobile-header"><Link href="/experiencia" className="lia-wordmark">LIA.doctor</Link><button onClick={() => setPanel('search')} aria-label="Pesquisar">⌕</button><a href={sceneManifest.community.url} target="_blank" rel="noopener noreferrer" aria-label="Comunidade LIA no WhatsApp">Comunidade ↗</a></header>
+      <header className="lia-mobile-header"><Link href="/" className="lia-wordmark">LIA.doctor</Link><button onClick={() => setPanel('search')} aria-label="Pesquisar">⌕</button><a href={sceneManifest.community.url} target="_blank" rel="noopener noreferrer" aria-label="Comunidade LIA no WhatsApp">Comunidade ↗</a></header>
       <section className="lia-mobile-welcome"><div className="lia-mobile-portrait" role="img" aria-label="LIA, assistente de inteligência artificial"><picture><source media="(max-width: 767px)" srcSet={mobilePhoto.srcSet} sizes="100vw" /><img src={transparentPixel} alt="" fetchPriority="high" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} /></picture></div><div><span className="lia-eyebrow">UM ESPAÇO SEU</span><h2>A companheira<br /><em>da sua jornada.</em></h2><p>Mais conhecimento.<br />Mais equilíbrio. Mais tu.</p><button className="lia-pill" onClick={() => setChat(true)}>Olá, sou a LIA. Conversamos? ↗</button><small>Assistente de inteligência artificial</small></div></section>
       <section className="lia-mobile-areas" aria-labelledby="areas-heading"><span className="lia-eyebrow">QUATRO CAMINHOS PARA SI</span><h2 id="areas-heading">Por onde vamos começar?</h2><div className="lia-mobile-doors">{rooms.map((room, i) => <Link key={room.id} href={`/experiencia/${room.id}`} className="lia-mobile-door" style={{ '--door-tone': room.material } as CSSProperties} onClick={event => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey) { event.preventDefault(); enter(room.id); } }}><div className="lia-door-view" style={cropStyle([room.boundsPx[0] + (i === 0 ? 63 : 15), 320, room.boundsPx[2] - 8, 525])} /><span className="lia-door-number">0{i + 1}</span><strong>{room.label}</strong><span>{room.subtitle}</span><span className="lia-door-arrow" aria-hidden="true">→</span></Link>)}</div></section>
       <section className="lia-mobile-books" id="leituras"><span className="lia-eyebrow">LEITURAS QUE ACOMPANHAM</span><h2>Um livro para cada momento.</h2><div className="lia-reading-list">{books.map(book => <Link href={book.href} key={book.id}><span className="lia-cover" style={cropStyle(book.cover)} /><span><strong>{book.title}</strong><small>{book.note}</small><span className="lia-reading-cta">Conhecer →</span></span></Link>)}</div></section>
       <a className="lia-community-card" href={sceneManifest.community.url} target="_blank" rel="noopener noreferrer"><span className="lia-eyebrow">UM ESPAÇO PARA PARTILHAR</span><h2>Comunidade LIA <span aria-hidden="true">↗</span></h2><p>Aprender, partilhar e evoluir juntas.</p><span>Entrar na comunidade →</span></a>
     </div> : null}
 
-    <footer className="lia-footer"><Link href="/">LIA.doctor <span>Leituras & experiências</span></Link><SocialLinks compact /><Link href="/privacidade">Privacidade</Link><button className="lia-text-button" onClick={() => setPanel('about')}>Sobre a LIA</button></footer>
+    <footer className="lia-footer"><Link href="/colecoes">LIA.doctor <span>Leituras & coleções</span></Link><SocialLinks compact /><Link href="/privacidade">Privacidade</Link><button className="lia-text-button" onClick={() => setPanel('about')}>Sobre a LIA</button></footer>
 
     {chat ? <ChatPanel voiceEnabled={voiceEnabled} onClose={() => setChat(false)} /> : null}
     {panel ? <FocusDialog title={panel === 'about' ? 'Sobre a LIA' : panel === 'areas' ? 'Quatro caminhos para si' : panel === 'books' ? 'Leituras que acompanham' : 'O que procura?'} onClose={() => { setPanel(null); setQuery(''); }}>

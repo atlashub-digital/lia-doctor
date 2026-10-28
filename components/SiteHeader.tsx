@@ -5,8 +5,8 @@ export function SiteHeader(){
   <nav className="nav" aria-label="Navegação principal">
    <Link href="/me-sentir-leve">Me Sentir Leve</Link>
    <Link href="/espelho-meu">EspelhoMeu</Link>
-   <Link href="/#colecoes">Coleções</Link>
+   <Link href="/colecoes">Coleções</Link>
   </nav>
-  <Link href="/me-sentir-leve/tomei-mounjaro-e-agora" className="nav-cta">Conhecer o lançamento <span aria-hidden="true">↗</span></Link>
+  <Link href="/" className="nav-cta">Visitar a casa LIA <span aria-hidden="true">↗</span></Link>
  </div></header>;
 }

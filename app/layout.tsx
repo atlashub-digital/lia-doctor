@@ -3,7 +3,7 @@ import {SiteHeader} from '@/components/SiteHeader';
 import {SiteFooter} from '@/components/SiteFooter';
 import './globals.css';
 export const metadata:Metadata={
- metadataBase:new URL('https://lia.doctor'),
+ metadataBase:new URL('https://www.lia.doctor'),
  title:{default:'LIA.DOCTOR — Leituras que acompanham',template:'%s | LIA.DOCTOR'},
  description:'Conheça as coleções Me Sentir Leve e EspelhoMeu. eBooks e conteúdos editoriais para acompanhar o seu próximo capítulo.',
  alternates:{canonical:'/'},

@@ -1,7 +1,7 @@
 import type {Metadata} from 'next';
 import Link from 'next/link';
 import {BookArt} from '@/components/BookArt';
-export const metadata:Metadata={alternates:{canonical:'/'}};
+export const metadata:Metadata={title:'Coleções',description:'Conheça as coleções Me Sentir Leve e EspelhoMeu: eBooks e conteúdos editoriais para acompanhar o seu próximo capítulo.',alternates:{canonical:'/colecoes'}};
 export default function Home(){
  return <>
  <section className="hero-home"><div className="container hero-home-grid">
