@@ -1,0 +1,219 @@
+/* The approved sales pages keep their existing frame and styles. */
+body:has(.lia-experience) > .site-header, body:has(.lia-experience) > .site-footer { display:none }
+.lia-experience { --lia-forest:#153d31; --lia-ivory:#fbf8f0; --lia-gold:#b79a5b; background:var(--lia-ivory); color:#17372c; min-height:100svh; font-family:'DM Sans',Arial,sans-serif }
+.lia-experience button, .lia-dialog button { cursor:pointer }
+.lia-experience button:disabled,.lia-dialog button:disabled { cursor:wait; opacity:.55 }
+.lia-experience :focus-visible,.lia-dialog :focus-visible { outline:3px solid #285749; outline-offset:5px }
+.lia-sr { position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important }
+.lia-stage { position:relative; width:100%; aspect-ratio:1672/941; isolation:isolate; background:#ece0c9; overflow:hidden }
+.lia-reference,.lia-canvas { position:absolute; inset:0 }
+.lia-reference { z-index:0; transition:opacity .35s ease }
+.lia-reference img { object-fit:contain }
+.lia-reference.is-hidden { opacity:0 }
+.lia-canvas { z-index:1; opacity:0; transition:opacity .32s ease; pointer-events:none }
+.lia-canvas.is-active { opacity:1 }
+.lia-photo-nav,.lia-desktop-actions { position:absolute; inset:0; z-index:3; pointer-events:none }
+.lia-photo-nav { z-index:4 }
+.lia-hotspot { position:absolute; display:block; padding:0; margin:0; background:transparent; border:1px solid transparent; border-radius:12px; pointer-events:auto; transition:box-shadow .25s,background .25s; -webkit-tap-highlight-color:transparent }
+.lia-hotspot:focus-visible { outline:3px solid #fff8e8; outline-offset:-5px; box-shadow:0 0 0 4px #1d4d3c,0 0 30px #fff6d0aa }
+.lia-door-hit { border-radius:50% 50% 3px 3px / 28% 28% 3px 3px }
+.lia-door-hit:hover { box-shadow:inset 0 0 22px #ffe4ab6b,0 0 15px #fff0c448; background:#ffffff08 }
+.lia-door-tip { position:absolute; left:7%; right:7%; bottom:6%; display:flex; align-items:center; justify-content:space-between; background:#fbf8f0ef; padding:12px 14px; border:1px solid #cfb785; border-radius:40px; color:#1d3c30; font-size:clamp(10px,1vw,16px); opacity:0; transform:translateY(7px); transition:.2s }
+.lia-door-hit:hover .lia-door-tip,.lia-door-hit:focus-visible .lia-door-tip { opacity:1; transform:none }
+.lia-person-hit { border:0 }
+.lia-person-tip { position:absolute; right:-12%; bottom:0; width:210px; color:#254334; background:#fffaf0; border:1px solid #d1bd92; box-shadow:0 10px 30px #61432926; border-radius:17px 17px 17px 0; padding:16px 20px; font-family:Georgia,serif; font-size:17px; line-height:1.4; opacity:0; transform:translateY(5px); transition:.22s; pointer-events:none }
+.lia-person-tip span { display:block; text-align:right; margin-top:5px }
+.lia-person-hit:hover .lia-person-tip,.lia-person-hit:focus-visible .lia-person-tip { opacity:1; transform:none }
+.lia-chat-hit:hover,.lia-chat-hit:focus-visible { box-shadow:0 7px 28px #4c3c2733; background:#ffffff08 }
+.lia-book-hit:hover,.lia-community-hit:hover { box-shadow:0 0 0 2px #fff7d38c,0 12px 22px #61482a33; background:#fff5df08 }
+.lia-mobile-content { display:none }
+.lia-footer { min-height:92px; padding:25px 4%; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:22px; border-top:1px solid #d9cbb2; font-size:12px; letter-spacing:.02em }
+.lia-footer > a:first-child { font-family:Georgia,serif; font-size:23px; font-weight:500 }
+.lia-footer > a:first-child span { display:block; font:10px 'DM Sans',sans-serif; color:#4d5c50; letter-spacing:.12em; margin-top:7px }
+.lia-footer nav { display:flex; gap:23px; flex-wrap:wrap }
+.lia-footer a:hover { text-decoration:underline; text-underline-offset:5px }
+.lia-text-button { border:0; padding:12px 0; background:none; color:inherit; text-decoration:underline; text-underline-offset:5px; font:inherit }
+.lia-eyebrow { display:block; font:600 10px/1.6 'DM Sans',Arial,sans-serif; letter-spacing:.19em; color:#58614e; text-transform:uppercase }
+.lia-pill { display:inline-flex; align-items:center; justify-content:space-between; gap:22px; min-height:48px; background:#153d31; color:#fff9e9; border:1px solid #153d31; border-radius:40px; padding:13px 24px; font:500 13px/1.5 'DM Sans',Arial,sans-serif; transition:box-shadow .2s,transform .2s }
+.lia-pill:hover { box-shadow:0 6px 20px #153d3126; transform:translateY(-1px) }
+.lia-room-overlay { position:absolute; z-index:5; inset:0; padding:3.5% 4.5%; display:flex; flex-direction:column; align-items:flex-start; pointer-events:none; background:linear-gradient(90deg,#17251c30,transparent 65%) }
+.lia-room-overlay > * { pointer-events:auto }
+.lia-back { display:inline-flex; min-height:44px; align-items:center; background:#fcf7eae8; padding:10px 20px; border-radius:40px; font-size:13px; box-shadow:0 5px 20px #4337241f }
+.lia-room-copy { margin:auto 0; padding:32px; width:min(380px,40%); background:#fbf8f0ed; border:1px solid #eadbc4; box-shadow:0 20px 60px #3026151f; border-radius:3px 35px 3px 3px }
+.lia-room-copy h2 { margin:14px 0 9px; color:#203c30; font:500 clamp(30px,3.5vw,54px)/1.06 'Playfair Display',Georgia,serif; letter-spacing:-.035em }
+.lia-room-copy p { font-size:14px; line-height:1.8; color:#465348 }
+.lia-room-copy .lia-room-subtitle { font-size:10px; letter-spacing:.09em; text-transform:uppercase; margin:16px 0 }
+.lia-room-copy .lia-pill { width:100%; gap:10px; font-size:12px; padding-inline:19px }
+.lia-room-copy .lia-text-button { margin-top:10px; font-size:12px }
+.lia-room-switcher { display:flex; flex-wrap:wrap; gap:12px }
+.lia-room-switcher a { display:inline-flex; gap:20px; align-items:center; min-height:44px; background:#fbf8f0ee; border:1px solid #d6c9ac; padding:10px 18px; border-radius:40px; font-size:12px }
+.lia-room-fallback { background:linear-gradient(110deg,var(--room-color),#fbf8f0e8 72%); isolation:isolate }
+.lia-room-fallback::before { content:''; position:absolute; right:8%; top:9%; bottom:-10%; width:33%; z-index:-1; border:18px solid #fff9ed80; border-radius:50% 50% 0 0 / 30% 30% 0 0; box-shadow:inset 0 0 30px #a58f6f26,0 18px 40px #89714c1a }
+.lia-cancel { position:absolute; z-index:7; right:24px; top:24px; background:#fbf8f0ee; border:1px solid #d7c6a7; border-radius:30px; min-height:44px; padding:10px 20px; color:#234532 }
+.is-travelling .lia-photo-nav { visibility:hidden }
+.lia-dialog { width:min(540px,calc(100vw - 32px)); padding:28px; border:1px solid #d7c8ac; color:#203e32; background:#fbf8f0; border-radius:7px 30px 7px 7px; box-shadow:0 30px 100px #17251d5c; max-height:calc(100svh - 40px); overflow:auto; overscroll-behavior:contain }
+.lia-dialog::backdrop { background:#102f25a8; backdrop-filter:blur(5px) }
+.lia-dialog > header { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:24px }
+.lia-dialog h2 { font:500 32px/1.1 'Playfair Display',Georgia,serif; letter-spacing:-.03em; margin:8px 0 0 }
+.lia-dialog p { font-size:14px; line-height:1.8 }
+.lia-dialog-close { border:1px solid #c7c6b5; min-width:44px; height:44px; border-radius:50%; color:#244a38; background:none; font-size:25px; line-height:1 }
+.lia-dialog-links { display:flex; flex-direction:column; margin-top:24px }
+.lia-dialog-links a { padding:18px 0; border-top:1px solid #d7d4c4; display:flex; gap:24px; align-items:center; justify-content:space-between; font:18px/1.4 Georgia,serif }
+.lia-search { display:grid; gap:10px; font-size:13px }
+.lia-search input { min-height:48px; border:1px solid #aaa98e; padding:10px 14px; border-radius:4px; background:#fffdf7; color:#253e31; font-size:16px }
+.lia-chat-dialog { width:min(480px,calc(100vw - 24px)); padding:24px; }
+.lia-chat-dialog > header { margin-bottom:18px }
+.lia-chat-dialog h2 { font-size:29px }
+.lia-chat-identity { display:flex; gap:10px; align-items:center; font-size:12px; padding-bottom:16px; border-bottom:1px solid #d9d8c8 }
+.lia-chat-identity small { display:block; font-size:10px; line-height:1.6; margin-top:3px; color:#526451 }
+.lia-chat-identity button { min-width:44px; min-height:44px; border:1px solid #ccd1c2; border-radius:50%; background:transparent; margin-left:auto; color:#284e3a; font-size:23px }
+.lia-avatar { display:block; width:44px; height:44px; flex-shrink:0; border-radius:50%; background-image:url('/_next/image?url=%2Fimmersive%2Flia-canonical.png&w=1920&q=90'); background-size:760px; background-position:-222px -85px; border:2px solid #c4aa74 }
+.lia-chat-notice { font-size:11px!important; color:#51634f; margin:14px 0 }
+.lia-chat-feed { min-height:120px; max-height:31svh; overflow-y:auto; padding:8px 4px 12px 0; display:flex; flex-direction:column; gap:14px; scrollbar-width:thin }
+.lia-chat-start { margin:auto 0; font:24px/1.4 Georgia,serif; color:#364d3c }
+.lia-chat-start small { display:block; font:10px/1.5 Arial,sans-serif; color:#64715f; margin-top:12px }
+.lia-message { border-radius:15px 15px 15px 2px; background:#e5ebdd; padding:12px 16px; max-width:93%; align-self:flex-start }
+.lia-message.user { align-self:flex-end; background:#214a38; color:#fff9eb; border-radius:15px 15px 2px 15px }
+.lia-message > span { font-size:10px; letter-spacing:.03em; opacity:.8 }
+.lia-message p { font-size:13px; white-space:pre-wrap; overflow-wrap:anywhere; margin:5px 0 0; line-height:1.6 }
+.lia-chat-loading { font-size:12px!important; color:#526451; margin:0 }
+.lia-chat-error { padding:13px 16px; background:#f9e8d9; border-left:3px solid #9e4e34; border-radius:3px; margin:12px 0 }
+.lia-chat-error p { font-size:12px; margin:0 0 8px; color:#693e2d }
+.lia-chat-error button { border:0; background:none; padding:8px 0; text-decoration:underline; color:#713c29; min-height:44px; font-size:12px }
+.lia-chat-form { margin-top:18px; padding-top:16px; border-top:1px solid #cdd2c2 }
+.lia-chat-form label { display:block; margin-bottom:10px; font-size:12px }
+.lia-chat-form textarea { display:block; width:100%; resize:vertical; max-height:160px; min-height:70px; background:#fffdf7; border:1px solid #abb79e; border-radius:10px; padding:13px; font:16px/1.5 'DM Sans',sans-serif; color:#234532 }
+.lia-chat-form > div { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:12px }
+.lia-chat-form small { font-size:9px; line-height:1.6; color:#526451 }
+.lia-chat-form .lia-pill { font-size:12px; min-height:44px; padding:10px 20px }
+.lia-voice { display:grid; gap:8px; margin-top:10px; font-size:11px }
+.lia-voice button,.lia-voice-consent button { min-height:44px; padding:10px; background:#e4e9db; border:1px solid #b6c1aa; color:#234c36; border-radius:5px; font-size:12px }
+.lia-voice-consent { border:1px solid #b6c1aa; border-radius:5px; padding:12px }
+.lia-voice-consent p { font-size:12px }.lia-voice-consent button { margin:4px }
+@media(min-width:768px) { .is-room .lia-stage { min-height:700px; height:calc(100svh - 92px); aspect-ratio:auto; max-height:1100px } }
+@media(max-width:1050px) and (min-width:768px) { .lia-room-copy { padding:23px; width:42% }.lia-room-copy p { font-size:12px }.lia-room-copy h2 { font-size:35px }.lia-person-tip { width:170px; font-size:14px }.lia-footer nav { gap:16px } }
+@media(max-width:767px) {
+  .lia-stage { display:none }
+  .lia-mobile-content { display:block }
+  .lia-mobile-header { display:flex; align-items:center; justify-content:space-between; padding:17px 20px; border-bottom:1px solid #dbd3be; gap:14px; background:#fbf8f0 }
+  .lia-wordmark { font:26px Georgia,serif; letter-spacing:-.04em; margin-right:auto }
+  .lia-mobile-header > a:last-child { border:1px solid #a8ae92; border-radius:30px; padding:10px 13px; min-height:44px; display:flex; align-items:center; font-size:10px; letter-spacing:.02em }
+  .lia-mobile-header button { display:grid; place-items:center; width:44px; height:44px; font-size:27px; border:0; background:none; color:#234832 }
+  .lia-mobile-welcome { position:relative; height:610px; display:flex; flex-direction:column; justify-content:flex-end; padding:28px 24px; isolation:isolate; overflow:hidden; background:radial-gradient(ellipse at 80% 20%,#dce0ca,#f6edda 70%) }
+  .lia-mobile-portrait { position:absolute; top:0; right:-12px; left:0; height:410px; z-index:-2 }
+  .lia-mobile-portrait img { object-fit:contain; object-position:center top }
+  .lia-mobile-welcome::after { content:''; position:absolute; inset:0; background:linear-gradient(0deg,#f8f0df 0%,#f8f0df 35%,#f8f0df00 60%); z-index:-1 }
+  .lia-mobile-welcome > div:last-child { margin-top:auto }
+  .lia-mobile-welcome h2 { font:37px/1.08 'Playfair Display',Georgia,serif; letter-spacing:-.04em; margin:12px 0; max-width:290px; text-shadow:0 1px 15px #fffcf0 }
+  .lia-mobile-welcome p { font-size:11px; line-height:1.6; letter-spacing:.12em; text-transform:uppercase; margin:10px 0 20px }
+  .lia-mobile-welcome .lia-pill { font-size:11px; gap:10px; min-height:46px; padding:12px 18px; box-shadow:0 4px 17px #153d3129 }
+  .lia-mobile-welcome small { display:block; font-size:9px; margin-top:9px; color:#435e49 }
+  .lia-mobile-areas { padding:39px 20px 32px; background:#f5eedf }
+  .lia-mobile-areas h2,.lia-mobile-books h2 { font:32px/1.15 'Playfair Display',Georgia,serif; letter-spacing:-.03em; margin:12px 0 28px; max-width:340px }
+  .lia-mobile-doors { display:grid; grid-template-columns:1fr 1fr; gap:20px 14px }
+  .lia-mobile-door { position:relative; overflow:hidden; border-radius:85px 85px 8px 8px; background:var(--door-tone); border:1px solid #bca878; box-shadow:inset 0 0 0 5px #ffffff3d,0 7px 15px #8d795215; display:flex; min-height:350px; padding:180px 15px 18px; align-items:center; flex-direction:column; justify-content:flex-start; text-align:center; isolation:isolate; color:#19382c }
+  .lia-mobile-door:nth-child(2) { color:#fff5df }
+  .lia-mobile-door:nth-child(2) .lia-door-number { background:#e8d7b51f; color:#fff4d4 }
+  .lia-door-view { position:absolute; inset:0 0 auto; height:175px; z-index:-1; background-repeat:no-repeat; border-radius:85px 85px 0 0; opacity:.95 }
+  .lia-mobile-door strong { font:22px/1.12 'Playfair Display',Georgia,serif; letter-spacing:-.03em; margin:12px 0 9px }
+  .lia-mobile-door > span:not(.lia-door-number):not(.lia-door-arrow) { font-size:8px; line-height:1.7; letter-spacing:.08em; text-transform:uppercase; min-height:27px }
+  .lia-door-number { width:28px; height:28px; display:grid; place-items:center; background:#fbf4e2b3; border-radius:50%; font:10px Georgia,serif; position:absolute; top:155px; box-shadow:0 2px 10px #5447261a }
+  .lia-door-arrow { display:grid; place-items:center; width:34px; height:34px; border:1px solid currentColor; border-radius:50%; font:22px Georgia,serif; margin-top:14px; opacity:.8 }
+  .lia-mobile-books { padding:42px 24px; background:#fffcf5 }
+  .lia-reading-list { display:flex; flex-direction:column; gap:22px }
+  .lia-reading-list > a { display:grid; grid-template-columns:88px 1fr; gap:23px; align-items:center; padding-bottom:24px; border-bottom:1px solid #dbd4be }
+  .lia-cover { display:block; width:88px; height:135px; border-radius:1px 4px 4px 1px; box-shadow:5px 8px 10px #59472526 }
+  .lia-reading-list strong { display:block; font:23px/1.15 'Playfair Display',Georgia,serif; letter-spacing:-.025em }
+  .lia-reading-list small { display:block; margin-top:9px; font-size:11px; line-height:1.7; color:#52604e }
+  .lia-reading-cta { display:block; font-size:10px; margin-top:14px; letter-spacing:.07em; text-transform:uppercase; color:#315a40 }
+  .lia-community-card { display:block; margin:5px 20px 32px; padding:29px 24px; border:1px solid #cfb889; border-radius:5px 26px 5px 5px; background:#e8e7d5; box-shadow:0 5px 20px #80714f0d }
+  .lia-community-card h2 { font:30px/1.2 'Playfair Display',Georgia,serif; letter-spacing:-.03em; margin:16px 0 }
+  .lia-community-card h2 span { float:right;font-size:25px }
+  .lia-community-card p { font-size:12px; margin-bottom:24px }
+  .lia-community-card > span:last-child { font-size:11px; text-decoration:underline; text-underline-offset:6px }
+  .lia-footer { padding:27px 24px; gap:24px; align-items:flex-start; display:grid; grid-template-columns:1fr 1fr; font-size:11px }
+  .lia-footer nav { grid-column:1/-1; grid-row:2; justify-content:space-between; gap:16px; font-size:10px }
+  .lia-footer .lia-text-button { padding:0; text-align:left; font-size:11px; min-height:44px }
+  .lia-footer > a:not(:first-child) { min-height:44px; display:flex; align-items:center }
+  .is-room .lia-stage,.is-travelling .lia-stage { display:block; min-height:760px; height:calc(100svh - 80px); aspect-ratio:auto }
+  .is-travelling .lia-stage { position:fixed; inset:0; z-index:50; min-height:100svh }
+  .is-travelling .lia-mobile-content { visibility:hidden }
+  .lia-room-overlay { padding:22px 20px; background:linear-gradient(0deg,#17251c50,transparent) }
+  .lia-room-copy { margin:auto 0 22px; width:100%; padding:25px; border-radius:3px 28px 3px 3px; max-width:460px }
+  .lia-room-copy h2 { font-size:40px }
+  .lia-room-copy p { font-size:13px }
+  .lia-room-copy .lia-pill { font-size:12px; min-height:48px }
+  .lia-room-copy .lia-text-button { min-height:44px }
+  .lia-room-switcher { gap:8px }
+  .lia-room-switcher a { padding:10px 13px; font-size:10px; gap:10px }
+  .lia-room-fallback { background:linear-gradient(150deg,var(--room-color),#fbf8f0e8) }
+  .lia-room-fallback::before { right:10%; width:70%; top:7%; bottom:32% }
+  .lia-dialog { padding:22px; max-height:calc(100svh - 24px) }
+  .lia-dialog h2 { font-size:29px }
+  .lia-dialog-close { min-width:44px }
+  .lia-chat-dialog { padding:20px; width:calc(100vw - 24px) }
+  .lia-chat-feed { max-height:27svh }
+  .lia-chat-dialog h2 { font-size:25px }
+}
+@media(max-width:370px) { .lia-mobile-header { padding-inline:15px;gap:8px }.lia-wordmark { font-size:24px }.lia-mobile-welcome { padding-inline:20px }.lia-mobile-door { padding-inline:10px }.lia-mobile-door strong { font-size:20px }.lia-mobile-doors { gap:12px }.lia-mobile-header > a:last-child { padding-inline:10px } }
+@media(prefers-reduced-motion:reduce) { .lia-experience *, .lia-dialog * { transition:none!important; animation:none!important; scroll-behavior:auto!important } }
+
+/* V1.1 Golden Room — EspelhoMeu living library (HTML twin of the 3D niche) */
+.lia-library { position:absolute; right:3.5%; bottom:5%; width:min(300px,24%); padding:20px 22px; background:#fbf8f0eb; border:1px solid #eadbc4; border-radius:30px 3px 3px 3px; box-shadow:0 18px 50px #3026151a }
+.lia-library-reflection { margin:0 0 12px; font:italic 400 17px/1.35 'Playfair Display',Georgia,serif; color:#814731 }
+.lia-library-list { list-style:none; margin:10px 0 12px; padding:0; display:grid; gap:2px }
+.lia-library-list a { display:flex; gap:12px; align-items:center; min-height:40px; padding:8px 10px; border-radius:8px; font-size:13px; color:#203c30; transition:background-color .2s,box-shadow .2s }
+.lia-library-list a:hover,.lia-library-list a.is-focused { background:#efc2aa52; box-shadow:inset 3px 0 0 #b77b5a }
+.lia-library-list a:focus-visible { outline:2px solid #153d31; outline-offset:2px }
+.lia-library-code { font:600 10px/1 'DM Sans',Arial,sans-serif; letter-spacing:.12em; color:#8a5a43 }
+.lia-library-label { height:112px; overflow:hidden; border-top:1px solid #e6d6bd; padding-top:10px; font-size:12px; line-height:1.6; color:#465348 }
+.lia-library-label p { margin:4px 0 }
+.lia-mirror-phrase p { margin:0; width:max-content; max-width:150px; text-align:center; font:italic 400 15px/1.35 'Playfair Display',Georgia,serif; color:#4d2819; text-shadow:0 0 6px #fff4e6,0 0 18px #fff4e6; animation:lia-mirror-in .9s .3s both ease-out }
+@keyframes lia-mirror-in { from { opacity:0; transform:translateY(4px) } to { opacity:.92; transform:none } }
+.lia-room-fallback .lia-library { background:#fbf8f0f5 }
+@media(max-width:1050px) and (min-width:768px) { .lia-library { width:min(300px,38%); padding:16px } .lia-library-list a { font-size:12px } }
+@media(max-width:767px) { .lia-library { position:static; width:auto; margin:16px 0 0; border-radius:20px 3px 3px 3px } .lia-library-label { height:auto; min-height:0 } .lia-mirror-phrase { display:none } .is-room:not(.is-travelling) .lia-stage { height:auto; min-height:max(760px,calc(100svh - 80px)) } .is-room:not(.is-travelling) .lia-room-overlay { position:relative; min-height:inherit; gap:16px } }
+@media(prefers-reduced-motion:reduce) { .lia-mirror-phrase p { animation:none; opacity:.92 } }
+
+/* V1.2 Livraria EspelhoMeu — 3D books are pointer targets; the sheet reads as a printed insert from the same room. */
+.lia-canvas.is-active.is-interactive { pointer-events:auto }
+.lia-room-copy,.lia-library { transition:opacity .35s ease,transform .35s ease }
+.has-book .lia-room-copy { opacity:0; transform:translateX(-12px); pointer-events:none; visibility:hidden; transition:opacity .35s ease,transform .35s ease,visibility 0s .35s }
+.has-book .lia-library { opacity:0; pointer-events:none; visibility:hidden; transition:opacity .25s ease,visibility 0s .25s }
+.lia-book-sheet { position:absolute; z-index:6; right:3.5%; top:50%; width:min(420px,33%); max-height:88%; overflow:auto; overscroll-behavior:contain; padding:34px 34px 26px; color:#2c2620;
+  background:radial-gradient(120% 80% at 0% 0%,#fffaf2 0%,#f6ecdf 60%,#efe1cf 100%),repeating-linear-gradient(0deg,#00000004 0 1px,transparent 1px 3px);
+  border:1px solid #e3cfb6; border-radius:3px 34px 3px 3px; box-shadow:0 1px 0 #fff inset,0 30px 70px #3b26161f,0 8px 22px #3b26161a;
+  transform:translateY(-50%); animation:lia-sheet-in .55s .6s both cubic-bezier(.2,.7,.2,1) }
+.lia-book-sheet::before { content:''; position:absolute; inset:10px; border:1px solid #b97a5540; border-radius:2px 26px 2px 2px; pointer-events:none }
+@keyframes lia-sheet-in { from { opacity:0; transform:translate(14px,-50%) } to { opacity:1; transform:translateY(-50%) } }
+.lia-book-sheet h2 { margin:10px 0 6px; font:500 clamp(28px,2.6vw,40px)/1.08 'Playfair Display',Georgia,serif; letter-spacing:-.025em; color:#2a2019 }
+.lia-book-sheet h2:focus { outline:none } .lia-book-sheet h2:focus-visible { outline:2px solid #153d31; outline-offset:4px }
+.lia-book-kicker { margin:0 0 14px; font:italic 400 15px/1.4 'Playfair Display',Georgia,serif; color:#8a5a43 }
+.lia-book-synopsis { margin:0 0 18px; font-size:15px; line-height:1.75; color:#3d3a33 }
+.lia-book-includes { list-style:none; margin:8px 0 18px; padding:0; display:grid; gap:6px; font-size:14px; color:#3d3a33 }
+.lia-book-includes li { display:flex; gap:10px; align-items:baseline } .lia-book-includes li::before { content:''; flex:none; width:14px; height:1px; background:#b97a55; transform:translateY(-4px) }
+.lia-book-facts { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:0 0 22px; padding:12px 0; border-block:1px solid #e3cfb6 }
+.lia-book-facts dt { font:600 9px/1.5 'DM Sans',Arial,sans-serif; letter-spacing:.16em; text-transform:uppercase; color:#7b6a5a } .lia-book-facts dd { margin:2px 0 0; font-size:12px; color:#2c2620 }
+.lia-book-buy { width:100% } .lia-book-fineprint { margin:8px 0 0; font-size:11px; color:#6d6458 }
+.lia-book-pending { margin:0; padding:12px 14px; border-left:2px solid #b97a55; background:#efc2aa2e; font-size:13px; color:#5a3a2b }
+.lia-book-return { display:block; margin-top:10px; font-size:12px }
+.lia-book-close { position:absolute; top:16px; right:18px; z-index:1; width:44px; height:44px; border-radius:50%; border:1px solid #d7c3a8; background:#fbf6ee; color:#5a3a2b; font-size:24px; line-height:1 }
+.lia-book-close:focus-visible,.lia-book-return:focus-visible,.lia-book-buy:focus-visible { outline:2px solid #153d31; outline-offset:3px }
+.lia-book-plate { display:grid; justify-items:center; gap:6px; margin:0 0 20px; padding:22px 16px; aspect-ratio:27/38; max-width:180px; background:#f4ebdf; border:2px solid #b97a55; outline:1px solid #b97a5555; outline-offset:-10px; color:#7a5442; text-align:center }
+.lia-book-plate span { font:600 9px/1 'DM Sans',Arial,sans-serif; letter-spacing:.16em; text-transform:uppercase } .lia-book-plate strong { font:400 54px/1 'Playfair Display',Georgia,serif } .lia-book-plate em { font:400 15px/1.3 'Playfair Display',Georgia,serif; color:#2f2620; font-style:normal } .lia-book-plate small { align-self:end; font:italic 11px Georgia,serif; color:#8c7a6b }
+.lia-room-fallback .lia-book-sheet { animation-delay:0s }
+@media(min-width:768px) { .lia-book-plate { float:right; max-width:104px; padding:12px 8px; margin:34px 0 10px 16px } .lia-book-plate strong { font-size:34px } .lia-book-plate em { font-size:11px } }
+@media(max-width:1050px) and (min-width:768px) { .lia-book-sheet { width:min(380px,44%); padding:26px } }
+@media(max-width:767px) {
+  .has-book .lia-room-copy,.has-book .lia-library { display:none }
+  .lia-book-sheet { position:relative; top:auto; right:auto; width:auto; max-height:none; margin-top:42svh; padding:28px 22px 22px; transform:none; animation-name:lia-sheet-up; border-radius:28px 28px 4px 4px }
+  @keyframes lia-sheet-up { from { opacity:0; transform:translateY(24px) } to { opacity:1; transform:none } }
+  .lia-room-fallback .lia-book-sheet { margin-top:16px }
+  .lia-book-facts { grid-template-columns:1fr 1fr }
+}
+@media(prefers-reduced-motion:reduce) { .lia-book-sheet { animation:none } .lia-room-copy,.lia-library { transition:none } }
+
+/* V1.2 release: official banner as the sheet's cover art when the 3D book is not shown; scope notice. */
+.lia-book-banner { display:block; width:100%; height:auto; margin:6px 0 18px; border-radius:2px 18px 2px 2px; box-shadow:0 10px 26px #3b261624 }
+.lia-book-notice { margin:0 0 16px; font-size:12px; line-height:1.6; color:#6d5b4c; font-style:italic }
+.lia-book-sheet .checkout-actions { display:block }

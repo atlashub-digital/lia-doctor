@@ -1,5 +1,7 @@
 import type {Metadata} from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
+import {mslBanners} from '@/lib/editorial-banners';
 import {BookArt} from '@/components/BookArt';
 import {HotmartCheckout} from '@/components/HotmartCheckout';
 export const metadata:Metadata={title:'Tomei Mounjaro. E Agora? — eBook',description:'Um guia educativo de 97 páginas para organizar perguntas, informação e cuidados. Conheça o livro e a oferta na Hotmart.',alternates:{canonical:'/me-sentir-leve/tomei-mounjaro-e-agora'}};
@@ -14,6 +16,7 @@ export default function Mounjaro(){
   <HotmartCheckout label="Ver oferta e comprar na Hotmart"/>
   <p className="small-print">O preço final, a moeda e as formas de pagamento aparecem no checkout oficial da Hotmart. O acesso é enviado conforme a configuração do produto na plataforma.</p>
   </div><BookArt variant="mounjaro" title="Tomei Mounjaro. E Agora?" subtitle="Informação para continuar com mais clareza." label="ME SENTIR LEVE · MSL001"/></div></section>
+  <section className="editorial-banner-section"><div className="container"><Image src={mslBanners.mounjaro} alt="Banner oficial da edição Tomei Mounjaro. E Agora?" width={2172} height={724} sizes="(max-width: 750px) 100vw, 1220px" className="editorial-banner-image"/></div></section>
   <section className="section paper-section"><div className="container"><div className="section-heading"><span className="kicker">PARA QUEM É ESTE LIVRO</span><h2>Mais informação. <em>Menos ruído.</em></h2><p>Uma leitura para quem quer transformar dúvidas em conversas produtivas, sem atalhos nem promessas irreais.</p></div>
   <div className="benefit-grid"><div><span className="benefit-no">01</span><h3>Organizar perguntas</h3><p>Encontrar espaço para reconhecer as dúvidas que merecem uma conversa com a sua equipa de saúde.</p></div><div><span className="benefit-no">02</span><h3>Olhar para o contexto</h3><p>Compreender a importância de informação, acompanhamento profissional e rotinas possíveis.</p></div><div><span className="benefit-no">03</span><h3>Respeitar o próprio caminho</h3><p>Abordar escolhas de cuidado sem comparação, culpabilização ou soluções universais.</p></div></div>
   </div></section>

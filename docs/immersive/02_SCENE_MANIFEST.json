@@ -162,7 +162,7 @@
     }
   ],
   "community": {
-    "url": "https://chat.whatsapp.com/FHzvr72KCiYCzlQ7klCTN3?s=sh&p=a&mlu=4&ilr=4"
+    "url": "https://chat.whatsapp.com/FHzvr72KCiYCzlQ7klCTN3"
   },
   "social": {
     "facebook": "https://web.facebook.com/lia.levelab",
@@ -177,11 +177,11 @@
     },
     "corpo": {
       "page": "/me-sentir-leve/corpo-forte",
-      "hotmart": "pending-both-pdfs"
+      "checkout": "https://pay.hotmart.com/K108189729W"
     },
     "espelho": {
       "page": "/espelho-meu",
-      "externalFulfillment": "espelho.lia.doctor"
+      "fulfillment": "hotmart-direct; offers in lib/offers.ts (P01-P05 live); no routing to espelho.lia.doctor"
     },
     "forcaNaCaneta": "NAO_PUBLICAR"
   },

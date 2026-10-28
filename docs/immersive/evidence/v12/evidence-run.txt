@@ -1,0 +1,8 @@
+entry desktop: no page/console errors
+library desktop: no page/console errors
+entry mobile: no page/console errors
+library mobile: no page/console errors
+3D pointer: hover at x=710 highlighted 7-dias-para-me-escolher; click opened /experiencia/espelho-meu/7-dias-para-me-escolher
+3d pointer: no page/console errors
+pending + public: no page/console errors
+fallback: no page/console errors

@@ -1,0 +1,21 @@
+/* Cinematic entry prototype (/entrada). Without JavaScript the final composition and CTA render as-is; with JS an
+   inline flag raises the curtain before first paint so the camera can start on the doors without a flash. */
+/* The entry owns the whole screen: hide the site chrome underneath so it is neither seen nor reachable by keyboard. */
+body:has(.entry) > .site-header, body:has(.entry) > .site-footer, body:has(.entry) > .skip { display:none }
+.entry { position:fixed; inset:0; z-index:60; overflow:hidden; background:#efe3cf; color:#fbf8f0; isolation:isolate }
+.entry-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap }
+.entry-viewport { position:absolute; inset:0; overflow:hidden }
+.entry-camera { position:absolute; left:50%; top:50%; width:max(100vw,calc(100svh * 1672 / 941)); height:max(100svh,calc(100vw * 941 / 1672)); transform:translate(-50%,-50%); will-change:transform,filter }
+.entry-camera img { object-fit:cover }
+.entry-curtain { position:absolute; inset:0; z-index:2; display:grid; place-items:center; background:radial-gradient(120% 90% at 60% 40%,#3a2a1e,#17110c 70%); opacity:0; visibility:hidden }
+.entry-js .entry-curtain { opacity:1; visibility:visible }
+.entry-line { margin:0; font:400 clamp(22px,3vw,34px)/1.2 'Playfair Display',Georgia,serif; letter-spacing:.01em; color:#f6e7cf; opacity:0; transform:translateY(8px) }
+.entry-skip { position:absolute; z-index:4; top:22px; right:22px; min-height:44px; padding:10px 20px; border-radius:40px; border:1px solid #fbf8f066; background:#17110c66; color:#fbf8f0; font:500 13px/1.2 'DM Sans',Arial,sans-serif; backdrop-filter:blur(6px) }
+.entry-skip:hover { background:#17110c99 }
+.entry-skip:focus-visible,.entry-cta:focus-visible { outline:2px solid #fbf8f0; outline-offset:3px }
+/* Desktop: the CTA joins the master's own tagline block (top-left), clear of the baked book cards and community bar. */
+.entry-arrival { position:absolute; z-index:3; left:11.2%; top:39% }
+.entry-cta { display:inline-flex; align-items:center; gap:18px; min-height:52px; padding:14px 28px; border-radius:40px; background:#153d31; color:#fff9e9; font:500 14px/1.3 'DM Sans',Arial,sans-serif; letter-spacing:.02em; box-shadow:0 14px 34px #0f2a2140; transition:transform .2s,box-shadow .2s }
+.entry-cta:hover { transform:translateY(-1px); box-shadow:0 18px 40px #0f2a2152 }
+@media(max-width:767px) { .entry-arrival { left:20px; right:20px; top:auto; bottom:clamp(24px,5svh,48px) } .entry-cta { width:100%; justify-content:space-between } .entry-skip { top:16px; right:16px } }
+@media(prefers-reduced-motion:reduce) { .entry-js .entry-curtain { opacity:0; visibility:hidden } .entry-camera { will-change:auto } }

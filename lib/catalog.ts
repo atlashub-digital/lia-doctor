@@ -6,39 +6,34 @@ export type Book = {
   eyebrow: string;
   description: string;
   details: string;
-  destination: string;
 };
 export const espelho: Book[] = [
   {
     slug:'7-dias-para-me-escolher', code:'01',title:'7 Dias Para Me Escolher',
     eyebrow:'O primeiro passo',description:'Sete convites para reconhecer, refletir e escolher no seu ritmo.',
-    details:'Leitura, jornada de sete dias e caderno de atividades.',
-    destination:'https://espelho.lia.doctor/7-dias-para-me-escolher'
+    details:'Leitura, jornada de sete dias e caderno de atividades.'
   },
   {
     slug:'eu-sou-bela-do-meu-jeito',code:'02',title:'Eu Sou Bela — Do Meu Jeito',
     eyebrow:'Expressão e identidade',description:'Uma leitura sobre a liberdade de se reconhecer do seu jeito.',
-    details:'Uma experiência editorial sobre beleza e expressão pessoal.',
-    destination:'https://espelho.lia.doctor/eu-sou-bela-do-meu-jeito'
+    details:'Uma experiência editorial sobre beleza e expressão pessoal.'
   },
   {
     slug:'21-dias-meu-melhor-reflexo',code:'03',title:'21 Dias — Meu Melhor Reflexo',
     eyebrow:'Ver · experimentar · evoluir',description:'Vinte e um encontros para observar, experimentar e continuar.',
-    details:'Três atos, caderno de atividades e cartões de reflexão.',
-    destination:'https://espelho.lia.doctor/21-dias-meu-melhor-reflexo'
+    details:'Três atos, caderno de atividades e cartões de reflexão.'
   },
   {
     slug:'recomecar-depois-dos-40',code:'04',title:'Recomeçar Depois dos 40',
     eyebrow:'Novos capítulos',description:'Para quem deseja olhar para novos começos com mais gentileza.',
-    details:'Leitura de reflexão sobre escolhas e possibilidades.',
-    destination:'https://espelho.lia.doctor/recomecar-depois-dos-40'
+    details:'Leitura de reflexão sobre escolhas e possibilidades.'
   },
   {
     slug:'diario-de-amor-proprio',code:'05',title:'Diário de Amor-Próprio',
     eyebrow:'Um encontro consigo',description:'Um espaço para registar pensamentos, reencontros e pequenas escolhas.',
-    details:'Diário e exercícios editoriais para acompanhar a leitura.',
-    destination:'https://espelho.lia.doctor/diario-de-amor-proprio'
+    details:'Diário e exercícios editoriais para acompanhar a leitura.'
   }
 ];
 export const hotmartMounjaro = 'https://pay.hotmart.com/S108189606N?checkoutMode=2';
-export const espelhoCollection = 'https://espelho.lia.doctor/colecao';
+// Corpo Forte — Além da Balança (eBook + workbook), checkout supplied by the Direction on 28/10/2026.
+export const corpoForteCheckout = 'https://pay.hotmart.com/K108189729W';
