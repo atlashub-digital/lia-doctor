@@ -5,10 +5,11 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
 import { Component, useEffect, useRef, useState, type CSSProperties, type ErrorInfo, type ReactNode } from 'react';
-import { books, canonicalImage, cropStyle, findRoom, hotspotStyle, mirrorReflection, rooms, sceneManifest, socialLabels, type RoomId } from '@/lib/immersive';
+import { books, canonicalImage, cropStyle, findRoom, hotspotStyle, mirrorReflection, rooms, sceneManifest, type RoomId } from '@/lib/immersive';
 import { espelhoOffers, findOffer, type Offer } from '@/lib/offers';
 import { ChatPanel } from './ChatPanel';
 import { FocusDialog } from './FocusDialog';
+import { SocialLinks } from '@/components/SocialLinks';
 import './experience.css';
 
 const PortalScene = dynamic(() => import('./PortalScene'), { ssr: false });
@@ -164,7 +165,7 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
       <a className="lia-community-card" href={sceneManifest.community.url} target="_blank" rel="noopener noreferrer"><span className="lia-eyebrow">UM ESPAÇO PARA PARTILHAR</span><h2>Comunidade LIA <span aria-hidden="true">↗</span></h2><p>Aprender, partilhar e evoluir juntas.</p><span>Entrar na comunidade →</span></a>
     </div> : null}
 
-    <footer className="lia-footer"><Link href="/">LIA.doctor <span>Leituras & experiências</span></Link><nav aria-label="Redes sociais oficiais">{Object.entries(sceneManifest.social).map(([key, url]) => <a key={key} href={url} target="_blank" rel="noopener noreferrer">{socialLabels[key]} ↗</a>)}</nav><Link href="/privacidade">Privacidade</Link><button className="lia-text-button" onClick={() => setPanel('about')}>Sobre a LIA</button></footer>
+    <footer className="lia-footer"><Link href="/">LIA.doctor <span>Leituras & experiências</span></Link><SocialLinks compact /><Link href="/privacidade">Privacidade</Link><button className="lia-text-button" onClick={() => setPanel('about')}>Sobre a LIA</button></footer>
 
     {chat ? <ChatPanel voiceEnabled={voiceEnabled} onClose={() => setChat(false)} /> : null}
     {panel ? <FocusDialog title={panel === 'about' ? 'Sobre a LIA' : panel === 'areas' ? 'Quatro caminhos para si' : panel === 'books' ? 'Leituras que acompanham' : 'O que procura?'} onClose={() => { setPanel(null); setQuery(''); }}>
