@@ -217,3 +217,10 @@ body:has(.lia-experience) > .site-header, body:has(.lia-experience) > .site-foot
 .lia-book-banner { display:block; width:100%; height:auto; margin:6px 0 18px; border-radius:2px 18px 2px 2px; box-shadow:0 10px 26px #3b261624 }
 .lia-book-notice { margin:0 0 16px; font-size:12px; line-height:1.6; color:#6d5b4c; font-style:italic }
 .lia-book-sheet .checkout-actions { display:block }
+
+/* Rooms V2: covers in the library list and on the sheet when the 3D book is not shown. */
+.lia-library-list a { gap:10px }
+.lia-library-cover { width:26px; height:auto; flex:none; border-radius:2px; box-shadow:0 2px 6px #3b26162e }
+.lia-book-cover { display:block; width:min(150px,40%); height:auto; margin:4px 0 18px; border-radius:3px; box-shadow:0 14px 30px #3b261633 }
+.lia-book-more { display:block; margin-top:14px; font-size:13px; font-weight:600 }
+.lia-mirror-phrase.is-hidden p { opacity:0; animation:none; transition:opacity .2s }
