@@ -5,7 +5,8 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
 import { Component, useEffect, useRef, useState, type CSSProperties, type ErrorInfo, type ReactNode } from 'react';
-import { books, canonicalImage, cropStyle, espelhoLibrary, findRoom, hotspotStyle, mirrorReflection, rooms, sceneManifest, socialLabels, type RoomId } from '@/lib/immersive';
+import { books, canonicalImage, cropStyle, findRoom, hotspotStyle, mirrorReflection, rooms, sceneManifest, socialLabels, type RoomId } from '@/lib/immersive';
+import { espelhoOffers, findOffer, type Offer } from '@/lib/offers';
 import { ChatPanel } from './ChatPanel';
 import { FocusDialog } from './FocusDialog';
 import './experience.css';
@@ -27,6 +28,8 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
   const pathname = usePathname();
   const router = useRouter();
   const selected = findRoom(pathname.split('/')[2]);
+  // Shareable selection: /experiencia/espelho-meu/<volume> opens that volume's editorial sheet.
+  const roomBook = selected?.id === 'espelho-meu' ? findOffer(pathname.split('/')[3]) : undefined;
   const [travelling, setTravelling] = useState<RoomId | null>(null);
   const [phase, setPhase] = useState('idle');
   const [webgl, setWebgl] = useState(false);
@@ -39,7 +42,11 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
   const [ready, setReady] = useState(false);
   const [focusBook, setFocusBook] = useState<string | null>(null);
   const roomHeading = useRef<HTMLHeadingElement>(null);
-  const navOrigin = useRef(pathname);
+  const sheetHeading = useRef<HTMLHeadingElement>(null);
+  const roomOrigin = useRef(selected?.id ?? null);
+  const bookOrigin = useRef(roomBook?.slug ?? null);
+  // True when the open sheet was pushed from this room, so closing can pop history instead of adding an entry.
+  const openedHere = useRef(false);
   const canRender = enabled && webgl && !reduced && !failed;
 
   useEffect(() => {
@@ -56,12 +63,33 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
   }, []);
 
   useEffect(() => {
-    if (navOrigin.current !== pathname) {
-      navOrigin.current = pathname;
+    const roomId = selected?.id ?? null;
+    if (roomOrigin.current !== roomId) {
+      roomOrigin.current = roomId;
       setTravelling(null); setPhase('idle'); setFocusBook(null);
       if (selected) requestAnimationFrame(() => roomHeading.current?.focus());
     }
-  }, [pathname, selected]);
+  }, [selected]);
+
+  useEffect(() => {
+    const slug = roomBook?.slug ?? null, previous = bookOrigin.current;
+    if (previous === slug) return;
+    bookOrigin.current = slug;
+    // Focus follows the book: into the sheet when it opens, back to the volume's link when it returns to the shelf.
+    if (slug) requestAnimationFrame(() => sheetHeading.current?.focus());
+    else { openedHere.current = false; if (previous) requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-volume="${previous}"]`)?.focus()); }
+  }, [roomBook]);
+
+  function openBook(slug: string) {
+    if (slug === roomBook?.slug) return;
+    openedHere.current = !roomBook;
+    if (roomBook) router.replace(`/experiencia/espelho-meu/${slug}`, { scroll: false });
+    else router.push(`/experiencia/espelho-meu/${slug}`, { scroll: false });
+  }
+  function closeBook() {
+    if (openedHere.current) router.back();
+    else router.push('/experiencia/espelho-meu', { scroll: false });
+  }
 
   useEffect(() => {
     if (!travelling) return;
@@ -81,7 +109,7 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
   const status = travelling ? `A entrar em ${findRoom(travelling)?.label}…` : selected ? `Sala ${selected.label}` : '';
   const searchItems = [...books.map(book => ({ title: book.title, href: book.href })), ...rooms.map(room => ({ title: room.label, href: `/experiencia/${room.id}` }))].filter(item => item.title.toLocaleLowerCase('pt').includes(query.toLocaleLowerCase('pt')));
 
-  return <div className={`lia-experience ${selected ? 'is-room' : ''} ${travelling ? 'is-travelling' : ''}`} data-phase={phase} data-mode={canRender ? 'webgl' : 'html'} data-scene-ready={ready}>
+  return <div className={`lia-experience ${selected ? 'is-room' : ''} ${travelling ? 'is-travelling' : ''} ${roomBook ? 'has-book' : ''}`} data-phase={phase} data-mode={canRender ? 'webgl' : 'html'} data-scene-ready={ready}>
     <h1 className="lia-sr">LIA.doctor — A companheira da sua jornada</h1>
     <div className="lia-announcement lia-sr" role="status" aria-live="polite">{status}</div>
     <div className="lia-stage" aria-label="Sala mediterrânea LIA">
@@ -89,8 +117,8 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
         <picture><source media="(min-width: 768px)" srcSet={desktopPhoto.srcSet} sizes="100vw" /><img src={transparentPixel} alt={desktopPhoto.alt} fetchPriority="high" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} /></picture>
       </div>
 
-      {canRender ? <div className={`lia-canvas ${activeScene ? 'is-active' : ''}`} aria-hidden="true">
-        <SceneBoundary onFailure={sceneFailed}><PortalScene room={current} travelling={travelling !== null} mobile={mobile} focusBook={focusBook} onReady={() => setReady(true)} onFailure={sceneFailed} onPhase={setPhase} onArrive={() => { if (travelling) { setPhase('room-ready'); router.push(`/experiencia/${travelling}`); } }} /></SceneBoundary>
+      {canRender ? <div className={`lia-canvas ${activeScene ? 'is-active' : ''} ${selected?.id === 'espelho-meu' && !travelling ? 'is-interactive' : ''}`} aria-hidden="true">
+        <SceneBoundary onFailure={sceneFailed}><PortalScene room={current} travelling={travelling !== null} mobile={mobile} focusBook={focusBook} selectedBook={roomBook?.slug ?? null} onHoverBook={setFocusBook} onSelectBook={openBook} onReady={() => setReady(true)} onFailure={sceneFailed} onPhase={setPhase} onArrive={() => { if (travelling) { setPhase('room-ready'); router.push(`/experiencia/${travelling}`); } }} /></SceneBoundary>
       </div> : null}
 
       {!selected ? <>
@@ -121,7 +149,8 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
           <a href={selected.destination} className="lia-pill" {...(selected.destination.startsWith('https:') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{selected.cta} <span aria-hidden="true">→</span></a>
           <button className="lia-text-button" onClick={() => setChat(true)}>Conversar com a LIA <span aria-hidden="true">↗</span></button>
         </article>
-        {selected.id === 'espelho-meu' ? <LivingLibrary active={focusBook} onFocus={setFocusBook} mirrorShown={canRender && !mobile} /> : null}
+        {selected.id === 'espelho-meu' ? <LivingLibrary active={focusBook} selectedSlug={roomBook?.slug ?? null} onFocus={setFocusBook} onOpen={openBook} mirrorShown={canRender && !mobile} /> : null}
+        {roomBook ? <BookSheet key={roomBook.slug} offer={roomBook} headingRef={sheetHeading} onClose={closeBook} showCover={!canRender} /> : null}
         <nav className="lia-room-switcher" aria-label="Outras salas">{rooms.filter(room => room.id !== selected.id).map(room => <Link key={room.id} href={`/experiencia/${room.id}`}>{room.label} <span aria-hidden="true">↗</span></Link>)}</nav>
       </div> : null}
       {travelling ? <button className="lia-cancel" onClick={() => { setTravelling(null); setPhase('idle'); }}>Cancelar entrada</button> : null}
@@ -147,17 +176,59 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
   </div>;
 }
 
-// Signature move of the Golden Room: focusing a volume here pulls the same volume out of the 3D niche.
-function LivingLibrary({ active, onFocus, mirrorShown }: { active: string | null; onFocus: (slug: string | null) => void; mirrorShown: boolean }) {
-  const book = espelhoLibrary.find(item => item.slug === active);
+// Signature move of the Golden Room: focusing a volume here pulls the same volume out of the 3D niche; choosing it
+// carries the book to the visitor and opens its sheet. The list is the keyboard/screen-reader path to the same state.
+function LivingLibrary({ active, selectedSlug, onFocus, onOpen, mirrorShown }: { active: string | null; selectedSlug: string | null; onFocus: (slug: string | null) => void; onOpen: (slug: string) => void; mirrorShown: boolean }) {
+  const book = espelhoOffers.find(item => item.slug === active);
   return <section className="lia-library" aria-labelledby="lia-library-heading" onMouseLeave={() => onFocus(null)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) onFocus(null); }}>
     <p className={mirrorShown ? 'lia-sr' : 'lia-library-reflection'}>{mirrorReflection}</p>
-    <h3 id="lia-library-heading" className="lia-eyebrow">Biblioteca viva · Coleção EspelhoMeu</h3>
+    <h3 id="lia-library-heading" className="lia-eyebrow">Livraria EspelhoMeu · Cinco volumes</h3>
     <ol className="lia-library-list">
-      {espelhoLibrary.map(item => <li key={item.slug}><Link href={item.href} aria-describedby={active === item.slug ? 'lia-library-label' : undefined} className={active === item.slug ? 'is-focused' : undefined} onMouseEnter={() => onFocus(item.slug)} onFocus={() => onFocus(item.slug)}><span className="lia-library-code">{item.code}</span>{item.title}</Link></li>)}
+      {espelhoOffers.map(item => <li key={item.slug}><Link href={`/experiencia/espelho-meu/${item.slug}`} scroll={false} data-volume={item.slug}
+        aria-current={selectedSlug === item.slug ? 'true' : undefined} aria-describedby={active === item.slug ? 'lia-library-label' : undefined}
+        className={active === item.slug || selectedSlug === item.slug ? 'is-focused' : undefined} onMouseEnter={() => onFocus(item.slug)} onFocus={() => onFocus(item.slug)}
+        onClick={event => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && event.button === 0) { event.preventDefault(); onOpen(item.slug); } }}>
+        <span className="lia-library-code">{item.code}</span>{item.title}</Link></li>)}
     </ol>
     <div id="lia-library-label" className="lia-library-label" aria-live="polite">
-      {book ? <><span className="lia-eyebrow">{book.eyebrow}</span><p>{book.description}</p><small>{book.details}</small></> : <small>Cada volume abre a sua página na coleção EspelhoMeu.</small>}
+      {book ? <><span className="lia-eyebrow">{book.eyebrow}</span><p>{book.description}</p><small>{book.details}</small></> : <small>Escolha um volume para o ver de perto.</small>}
     </div>
+  </section>;
+}
+
+// Editorial sheet for the presented volume: printed-paper treatment, real catalogue copy, Hotmart only when confirmed.
+function BookSheet({ offer, headingRef, onClose, showCover }: { offer: Offer; headingRef: React.RefObject<HTMLHeadingElement | null>; onClose: () => void; showCover: boolean }) {
+  const close = useRef(onClose); close.current = onClose;
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      // Chat and panels are modal dialogs with their own Escape; never close the book underneath them.
+      if (event.key !== 'Escape' || event.defaultPrevented || document.querySelector('dialog[open]')) return;
+      close.current();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+  const live = offer.commerce.status === 'live' ? offer.commerce : null;
+  return <section className="lia-book-sheet" role="dialog" aria-modal="false" aria-labelledby="lia-book-title">
+    <button className="lia-book-close" onClick={onClose} aria-label="Fechar a ficha e devolver o livro à estante"><span aria-hidden="true">×</span></button>
+    {showCover ? <figure className="lia-book-plate" aria-label={`Volume ${offer.code}: capa oficial em homologação`}>
+      <span>EspelhoMeu Editions</span><strong>{offer.code}</strong><em>{offer.title}</em><small>Capa oficial em homologação</small>
+    </figure> : null}
+    <span className="lia-eyebrow">{offer.collection} · Volume {offer.code}</span>
+    <h2 id="lia-book-title" ref={headingRef} tabIndex={-1}>{offer.title}</h2>
+    <p className="lia-book-kicker">{offer.eyebrow}</p>
+    <p className="lia-book-synopsis">{offer.description}</p>
+    <h3 className="lia-eyebrow">Inclui</h3>
+    <ul className="lia-book-includes">{offer.includes.map(item => <li key={item}>{item}</li>)}</ul>
+    <dl className="lia-book-facts">
+      <div><dt>Coleção</dt><dd>{offer.collection}</dd></div>
+      <div><dt>Referência</dt><dd>{offer.productCode}</dd></div>
+      <div><dt>Compra e entrega</dt><dd>{live ? 'Hotmart' : 'Em preparação nesta loja'}</dd></div>
+    </dl>
+    {live ? <>
+      <a className="lia-pill lia-book-buy" href={live.checkout} rel="noopener noreferrer">Comprar na Hotmart <span aria-hidden="true">↗</span></a>
+      <p className="lia-book-fineprint">Pagamento seguro e entrega feitos pela Hotmart.</p>
+    </> : <p className="lia-book-pending" role="note">A compra deste volume nesta loja está em preparação.</p>}
+    <button className="lia-text-button lia-book-return" onClick={onClose}>Devolver à estante</button>
   </section>;
 }

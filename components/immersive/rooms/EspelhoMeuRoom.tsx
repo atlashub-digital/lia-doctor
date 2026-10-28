@@ -3,24 +3,28 @@
 import { Html, RoundedBox } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { gsap } from 'gsap';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import {
   CatmullRomCurve3, Color, DoubleSide, EllipseCurve, InstancedMesh, MeshPhysicalMaterial, MeshStandardMaterial,
-  Object3D, Path, PlaneGeometry, PMREMGenerator, Shape, ShapeGeometry, Vector2, Vector3, type Group, type Material, type Texture,
+  Object3D, Path, PlaneGeometry, PMREMGenerator, type PointLight, Shape, ShapeGeometry, SRGBColorSpace, TextureLoader, Vector2, Vector3, type Group, type Material, type Texture,
 } from 'three';
 import { Reflector } from 'three/examples/jsm/objects/Reflector.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { espelhoLibrary, mirrorReflection } from '@/lib/immersive';
+import { mirrorReflection } from '@/lib/immersive';
+import { espelhoOffers, type Offer } from '@/lib/offers';
 import { archFrame, archPath } from '../scene-kit';
-import { bookcloth, coastView, limePlaster, linen, oak, travertine } from './espelho-materials';
+import { bookcloth, coastView, limePlaster, linen, oak, pendingCover, spineLabel, travertine } from './espelho-materials';
 
 // Golden Room "Galeria do Reflexo" (V1.1 S2, look-dev pass over the approved blockout).
 // Layer contract: docs/immersive/05_V11_S1_AUDIT_GOLDEN_ROOM.md §3. Look-dev notes: 06_V11_G2_GOLDEN_ROOM_LOOKDEV.md.
 // Local space: x ∈ [-2.15, 2.15], z ∈ [-10, 0]; the arrival camera sits at (0, 1.65, -2.8) looking at z = -9.
 const WIDTH = 4.3, HALF = WIDTH / 2, HEIGHT = 4.2;
 const coverTones = ['#e7b59c', '#cf9a8b', '#efcdb8', '#b9806a', '#efe0d0'];
-// Face-out volumes in the niche: [x, shelf y]. Order follows the catalogue (P01–P05).
-const volumeSlots: [number, number][] = [[-.42, 1.22], [0, 1.22], [.42, 1.22], [-.22, 1.87], [.22, 1.87]];
+// The five official volumes stand spine-out together on the middle shelf, in catalogue order (P01–P05).
+const VOLUME_X = [-.17, -.105, -.04, .025, .09], VOLUME_SHELF = 1.22;
+// Where a selected volume is presented, in room space (arrival camera at z = -2.8). Desktop leaves the right third
+// to the editorial sheet; mobile lifts the book above the bottom sheet.
+const PRESENT = { desktop: { x: -.2, y: 1.6, z: -4.35, scale: 1.55 }, mobile: { x: 0, y: 2.02, z: -4.3, scale: .92 } };
 const NICHE_X = .12, NICHE_Z = -9.86;
 // Coastal window in the back wall, right of the niche.
 const WINDOW = { x: 1.62, half: .42, sill: .55, spring: 2.55 };
@@ -112,27 +116,73 @@ function useRoomMaterials() {
 }
 type RoomMaterials = ReturnType<typeof useRoomMaterials>;
 
-function Volume({ slug, index, focused, m }: { slug: string; index: number; focused: boolean; m: RoomMaterials }) {
+type BookHandlers = { onHover: (slug: string | null) => void; onSelect: (slug: string) => void };
+
+// Spine, front board and back cloth for each official volume. Approved covers load from the offer catalogue;
+// until then the front board is an explicit "pending" plate.
+function useVolumeMaterials(env: Texture) {
+  const textures = useDisposable<Texture>(() => espelhoOffers.flatMap((offer, i) => {
+    const tone = coverTones[i];
+    let front: Texture;
+    if (offer.cover.status === 'approved') { front = new TextureLoader().load(offer.cover.src); front.colorSpace = SRGBColorSpace; }
+    else front = pendingCover(offer.title, offer.code);
+    return [spineLabel(offer.title, offer.productCode, tone), front, bookcloth(tone, 90 + i)];
+  }));
+  const materials = useDisposable<Material>(() => textures.map((map, i) => new MeshStandardMaterial({ map, roughness: i % 3 === 1 ? .7 : .86, envMap: env, envMapIntensity: .35 })), [env, ...textures]);
+  return espelhoOffers.map((_, i) => ({ spine: materials[i * 3], front: materials[i * 3 + 1], back: materials[i * 3 + 2] }));
+}
+
+function Volume({ offer, index, hovered, selected, mobile, faces, handlers }: {
+  offer: Offer; index: number; hovered: boolean; selected: boolean; mobile: boolean; faces: Material[]; handlers: BookHandlers;
+}) {
   const group = useRef<Group>(null);
-  const { invalidate } = useThree();
-  const [x, y] = volumeSlots[index];
-  // Box faces: +x fore-edge, -x spine, +y head, -y tail, +z cover, -z back board.
-  const faces = useMemo(() => [m.pages, m.copper, m.pages, m.pages, m.covers[index], m.covers[index]], [m, index]);
+  const timeline = useRef<gsap.core.Timeline | null>(null);
+  const { invalidate, gl } = useThree();
+  const slot = { x: NICHE_X + VOLUME_X[index], y: VOLUME_SHELF, z: NICHE_Z + .18 };
+  // Spine-out on the shelf. Set once here: a JSX rotation prop would be re-applied on every render and fight GSAP.
+  useLayoutEffect(() => { group.current?.rotation.set(0, Math.PI / 2, 0); }, []);
   useEffect(() => {
     const target = group.current;
     if (!target) return;
-    // Presented state: the volume slides off the shelf, lifts and turns its cover toward the visitor.
-    const tween = gsap.to(target.position, { y: focused ? .07 : 0, z: focused ? .24 : 0, duration: .5, ease: 'power3.out', onUpdate: invalidate });
-    const turn = gsap.to(target.rotation, { x: focused ? .1 : 0, y: focused ? (x <= 0 ? .42 : -.42) : 0, duration: .5, ease: 'power3.out', onUpdate: invalidate });
-    return () => { tween.kill(); turn.kill(); };
-  }, [focused, x, invalidate]);
-  // Covers stay blank bookcloth until the approved P01–P05 files clear editorial GO (never generated substitutes).
-  return <group position={[NICHE_X + x, y, NICHE_Z + .2]}>
-    <group ref={group} name={`espelho-book-${slug}`}>
-      <mesh castShadow receiveShadow position={[0, .19, 0]} rotation={[-.07, 0, 0]} material={faces}>
-        <boxGeometry args={[.27, .38, .045]} />
+    timeline.current?.kill();
+    const tl = gsap.timeline({ onUpdate: invalidate });
+    const atRest = Math.abs(target.position.x) < 1e-3 && Math.abs(target.position.y) < 1e-3 && target.scale.x === 1;
+    if (selected) {
+      const pose = mobile ? PRESENT.mobile : PRESENT.desktop;
+      // Pull off the shelf, then carry it to the visitor while it turns its front board toward the camera.
+      tl.to(target.position, { z: .34, duration: .32, ease: 'power2.out' })
+        .to(target.position, { x: pose.x - slot.x, y: pose.y - slot.y - .19 * pose.scale, z: pose.z - slot.z, duration: .95, ease: 'power3.inOut' })
+        .to(target.rotation, { x: -.04, y: 0, duration: .95, ease: 'power3.inOut' }, '<')
+        .to(target.scale, { x: pose.scale, y: pose.scale, z: pose.scale, duration: .95, ease: 'power3.inOut' }, '<');
+    } else if (atRest) {
+      tl.to(target.position, { z: hovered ? .1 : 0, duration: .3, ease: 'power2.out' });
+    } else {
+      // Return: shrink and turn back to spine-out in front of the shelf, then slide home.
+      tl.to(target.scale, { x: 1, y: 1, z: 1, duration: .8, ease: 'power3.inOut' })
+        .to(target.rotation, { x: 0, y: Math.PI / 2, duration: .8, ease: 'power3.inOut' }, '<')
+        .to(target.position, { x: 0, y: 0, z: .34, duration: .8, ease: 'power3.inOut' }, '<')
+        .to(target.position, { z: hovered ? .1 : 0, duration: .3, ease: 'power2.out' });
+    }
+    // Settled state for tests and for the cached reflection/shadows: "<slug>" once presented, "shelf" once home.
+    tl.eventCallback('onComplete', () => {
+      if (selected) gl.domElement.dataset.bookState = offer.slug;
+      else if (!atRest || !gl.domElement.dataset.bookState) gl.domElement.dataset.bookState = 'shelf';
+      gl.domElement.dispatchEvent(new Event('lia:scene-changed'));
+      invalidate();
+    });
+    if (selected || !atRest) gl.domElement.dataset.bookState = 'moving';
+    timeline.current = tl;
+    return () => { tl.kill(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, hovered, mobile, invalidate]);
+  return <group position={[slot.x, slot.y, slot.z]}>
+    <group ref={group} name={`espelho-book-${offer.slug}`}>
+      <mesh castShadow receiveShadow position={[0, .19, 0]} material={faces}
+        onPointerOver={event => { event.stopPropagation(); if (!selected) { handlers.onHover(offer.slug); document.body.style.cursor = 'pointer'; } }}
+        onPointerOut={() => { handlers.onHover(null); document.body.style.cursor = ''; }}
+        onClick={event => { event.stopPropagation(); if (!selected) { document.body.style.cursor = ''; handlers.onSelect(offer.slug); } }}>
+        <boxGeometry args={[.27, .38, .06]} />
       </mesh>
-      {focused ? <pointLight position={[0, .3, .35]} color="#ffd2ad" intensity={.5} distance={.9} decay={2} /> : null}
     </group>
   </group>;
 }
@@ -156,9 +206,31 @@ function Ceramic({ position, profile, m }: { position: [number, number, number];
 const tallVase: [number, number][] = [[0, 0], [.05, 0], [.07, .04], [.075, .12], [.05, .2], [.032, .26], [.04, .3], [0, .3]];
 const bowl: [number, number][] = [[0, 0], [.05, 0], [.1, .03], [.12, .07], [.115, .075], [0, .03]];
 
-function NicheLibrary({ focusBook, m }: { focusBook: string | null; m: RoomMaterials }) {
+// One warm accent light, always mounted, that travels to the hovered or presented volume. Mounting and unmounting
+// lights changes the light count, which recompiles every material in the scene (seconds on modest GPUs).
+function AccentLight({ focusBook, selectedBook, mobile }: { focusBook: string | null; selectedBook: string | null; mobile: boolean }) {
+  const light = useRef<PointLight>(null);
+  const { invalidate } = useThree();
+  useEffect(() => {
+    const target = light.current;
+    if (!target) return;
+    const index = espelhoOffers.findIndex(offer => offer.slug === (selectedBook ?? focusBook));
+    const pose = mobile ? PRESENT.mobile : PRESENT.desktop;
+    const to = selectedBook ? { x: pose.x + .35, y: pose.y + .45, z: pose.z + .9, intensity: .45 }
+      : index >= 0 ? { x: NICHE_X + VOLUME_X[index] + .05, y: VOLUME_SHELF + .32, z: NICHE_Z + .65, intensity: .7 } : { intensity: 0 };
+    const tween = gsap.to(target, { intensity: to.intensity, duration: .4, onUpdate: invalidate });
+    if ('x' in to) gsap.set(target.position, { x: to.x, y: to.y, z: to.z });
+    return () => { tween.kill(); };
+  }, [focusBook, selectedBook, mobile, invalidate]);
+  return <pointLight ref={light} color="#ffd9b8" intensity={0} distance={1.6} decay={2} position={[NICHE_X, VOLUME_SHELF + .32, NICHE_Z + .65]} />;
+}
+
+function NicheLibrary({ focusBook, selectedBook, mobile, handlers, m }: { focusBook: string | null; selectedBook: string | null; mobile: boolean; handlers: BookHandlers; m: RoomMaterials }) {
   const frame = useMemo(() => archFrame(.86, .7, 2.32, 0), []);
   const back = useMemo(() => archPath(new Shape(), .7, 0, 2.32), []);
+  const volumes = useVolumeMaterials(m.env);
+  // Box faces: +x fore-edge, -x spine, +y head, -y tail, +z front board, -z back board.
+  const faces = useMemo(() => volumes.map(v => [m.pages, v.spine, m.pages, m.pages, v.front, v.back]), [volumes, m.pages]);
   return <group>
     <mesh castShadow receiveShadow position={[NICHE_X, 0, NICHE_Z]} material={m.wall}><extrudeGeometry args={[frame, { depth: .3, bevelEnabled: true, bevelSize: .025, bevelThickness: .025, bevelSegments: 4, curveSegments: 48 }]} /></mesh>
     <mesh receiveShadow position={[NICHE_X, 0, NICHE_Z + .01]} material={m.arch}><shapeGeometry args={[back, 48]} /></mesh>
@@ -169,16 +241,22 @@ function NicheLibrary({ focusBook, m }: { focusBook: string | null; m: RoomMater
       <mesh position={[NICHE_X, y - .021, NICHE_Z + .27]}><boxGeometry args={[1.2, .006, .012]} /><meshBasicMaterial color="#ffd8a6" toneMapped={false} /></mesh>
       <pointLight position={[NICHE_X, y - .06, NICHE_Z + .32]} color="#ffcf9e" intensity={.55} distance={1.1} decay={2} />
     </group>)}
-    {espelhoLibrary.map((book, i) => <Volume key={book.slug} slug={book.slug} index={i} focused={focusBook === book.slug} m={m} />)}
+    {espelhoOffers.map((offer, i) => <Volume key={offer.slug} offer={offer} index={i} faces={faces[i]} mobile={mobile} handlers={handlers}
+      hovered={focusBook === offer.slug && selectedBook !== offer.slug} selected={selectedBook === offer.slug} />)}
+    <AccentLight focusBook={focusBook} selectedBook={selectedBook} mobile={mobile} />
+    <Spines x={-.62} y={VOLUME_SHELF + .02} count={10} m={m} seed={4} />
+    <Spines x={.19} y={VOLUME_SHELF + .02} count={9} m={m} seed={6} />
     <Spines x={-.66} y={1.87} count={5} m={m} seed={1} />
     <Spines x={.44} y={1.87} count={5} m={m} seed={3} />
     <Spines x={-.5} y={2.52} count={9} m={m} seed={2} />
+    <Ceramic position={[NICHE_X - .02, 1.87, NICHE_Z + .18]} profile={tallVase} m={m} />
     <Ceramic position={[NICHE_X + .36, 2.52, NICHE_Z + .18]} profile={tallVase} m={m} />
     <Ceramic position={[NICHE_X + .45, .6, NICHE_Z + .25]} profile={bowl} m={m} />
   </group>;
 }
 
 function Mirror({ active, mobile, m }: { active: boolean; mobile: boolean; m: RoomMaterials }) {
+  // `active` is false while a volume is presented, so the DOM phrase never floats over the book.
   const { invalidate } = useThree();
   const reflector = useMemo(() => {
     const oval = new Shape(); oval.absellipse(0, 0, .48, .98, 0, Math.PI * 2, false, 0);
@@ -186,7 +264,24 @@ function Mirror({ active, mobile, m }: { active: boolean; mobile: boolean; m: Ro
     const mirror = new Reflector(new ShapeGeometry(oval, 64), { color: 0x8c847c, textureWidth: mobile ? 384 : 640, textureHeight: mobile ? 768 : 1280, clipBias: .003 });
     return mirror;
   }, [mobile]);
-  useEffect(() => { invalidate(); return () => { reflector.geometry.dispose(); reflector.dispose(); }; }, [reflector, invalidate]);
+  const gl = useThree(state => state.gl);
+  useEffect(() => {
+    // The reflection is the most expensive pass (a second render of the scene). Re-render it only when the camera
+    // moves or the room announces a change (a book settled); otherwise keep the previous reflection texture.
+    const render = reflector.onBeforeRender.bind(reflector);
+    const lastCamera = new Float32Array(16);
+    let dirty = true;
+    reflector.onBeforeRender = (renderer, scene, camera, ...rest) => {
+      const moved = camera.matrixWorld.elements.some((value, i) => value !== lastCamera[i]);
+      if (!dirty && !moved) return;
+      lastCamera.set(camera.matrixWorld.elements); dirty = false;
+      render(renderer, scene, camera, ...rest);
+    };
+    const markDirty = () => { dirty = true; };
+    gl.domElement.addEventListener('lia:scene-changed', markDirty);
+    invalidate();
+    return () => { gl.domElement.removeEventListener('lia:scene-changed', markDirty); reflector.geometry.dispose(); reflector.dispose(); };
+  }, [reflector, invalidate, gl]);
   const rim = useMemo(() => {
     const ellipse = new EllipseCurve(0, 0, .5, 1, 0, Math.PI * 2, false, 0);
     return new CatmullRomCurve3(ellipse.getPoints(160).map(p => new Vector3(p.x, p.y, 0)), true);
@@ -337,7 +432,7 @@ function SunLight() {
   </>;
 }
 
-export function EspelhoMeuRoom({ focusBook, active, mobile = false }: { focusBook: string | null; active: boolean; mobile?: boolean }) {
+export function EspelhoMeuRoom({ focusBook, selectedBook = null, active, mobile = false, handlers }: { focusBook: string | null; selectedBook?: string | null; active: boolean; mobile?: boolean; handlers: BookHandlers }) {
   const m = useRoomMaterials();
   // Foreground plane: the jambs of this arch occlude the room edges at arrival.
   const arch = useMemo(() => archedOpening(HALF, 0, HEIGHT, 1.25, 2.2), []);
@@ -367,8 +462,8 @@ export function EspelhoMeuRoom({ focusBook, active, mobile = false }: { focusBoo
     <SunLight />
     {/* Soft bounce from the plaster ceiling; the env map supplies the rest of the fill. */}
     <pointLight position={[.2, 3.7, -7.4]} color="#ffdcb8" intensity={1} distance={7} decay={2} />
-    <NicheLibrary focusBook={focusBook} m={m} />
-    <Mirror active={active} mobile={mobile} m={m} />
+    <NicheLibrary focusBook={focusBook} selectedBook={selectedBook} mobile={mobile} handlers={handlers} m={m} />
+    <Mirror active={active && !selectedBook} mobile={mobile} m={m} />
     <CoastWindow m={m} />
     <Banquette m={m} />
     <TubChair m={m} />

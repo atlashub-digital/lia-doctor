@@ -157,3 +157,47 @@ export function coastView(seed: number) {
   texture.colorSpace = SRGBColorSpace;
   return texture;
 }
+
+function canvasTexture(width: number, height: number, draw: (g: CanvasRenderingContext2D) => void) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  const g = canvas.getContext('2d');
+  if (!g) throw new Error('2D canvas unavailable');
+  draw(g);
+  const texture = new CanvasTexture(canvas);
+  texture.colorSpace = SRGBColorSpace;
+  texture.anisotropy = 8;
+  return texture;
+}
+
+/** Spine of a real volume: catalogue title and volume number, set like a stamped cloth spine. */
+export function spineLabel(title: string, code: string, tone: string) {
+  return canvasTexture(96, 608, g => {
+    g.fillStyle = tone; g.fillRect(0, 0, 96, 608);
+    g.fillStyle = '#b97a55'; g.fillRect(0, 26, 96, 5); g.fillRect(0, 577, 96, 5);
+    g.fillStyle = '#3b2a22'; g.font = '600 22px Georgia, "DejaVu Serif", serif'; g.textAlign = 'center';
+    g.fillText(code, 48, 560);
+    g.save(); g.translate(52, 300); g.rotate(Math.PI / 2);
+    g.font = '400 25px Georgia, "DejaVu Serif", serif'; g.fillText(title.length > 30 ? `${title.slice(0, 29)}…` : title, 0, 0);
+    g.restore();
+  });
+}
+
+/**
+ * Front board while the approved cover is pending editorial GO. Deliberately reads as a placeholder (it says so),
+ * never as a substitute cover: no imagery, no invented art.
+ */
+export function pendingCover(title: string, code: string) {
+  return canvasTexture(540, 760, g => {
+    g.fillStyle = '#f4ebdf'; g.fillRect(0, 0, 540, 760);
+    g.strokeStyle = '#b97a55'; g.lineWidth = 3; g.strokeRect(28, 28, 484, 704);
+    g.fillStyle = '#7a5442'; g.textAlign = 'center';
+    g.font = '600 18px "DejaVu Sans", Arial, sans-serif'; g.fillText('ESPELHOMEU EDITIONS', 270, 92);
+    g.font = '400 96px Georgia, "DejaVu Serif", serif'; g.fillText(code, 270, 300);
+    g.fillStyle = '#2f2620'; g.font = '400 34px Georgia, "DejaVu Serif", serif';
+    const words = title.split(' '); let line = '', y = 400;
+    for (const word of words) { const next = line ? `${line} ${word}` : word; if (g.measureText(next).width > 400) { g.fillText(line, 270, y); line = word; y += 44; } else line = next; }
+    g.fillText(line, 270, y);
+    g.fillStyle = '#8c7a6b'; g.font = 'italic 400 20px Georgia, "DejaVu Serif", serif'; g.fillText('Capa oficial em homologação', 270, 690);
+  });
+}

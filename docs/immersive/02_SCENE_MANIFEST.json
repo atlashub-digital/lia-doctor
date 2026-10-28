@@ -181,7 +181,7 @@
     },
     "espelho": {
       "page": "/espelho-meu",
-      "externalFulfillment": "espelho.lia.doctor"
+      "fulfillment": "hotmart-direct; offers in lib/offers.ts (P01 live, P02-P05 pending); no routing to espelho.lia.doctor"
     },
     "forcaNaCaneta": "NAO_PUBLICAR"
   },
