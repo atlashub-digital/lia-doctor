@@ -62,3 +62,18 @@ h2{font-size:clamp(39px,4.2vw,62px);letter-spacing:-.038em;line-height:1.1}p{lin
  .collection-hero{padding:73px 0}.collection-hero h1{font-size:65px}.feature-visual .book-scene{min-height:370px}.feature-copy{padding:24px 26px 37px}.product-hero{padding:32px 0 70px}.product-main h1{font-size:58px}.product-hero-grid .book-scene{min-height:370px}.breadcrumbs{margin-bottom:42px}.benefit-grid{grid-template-columns:1fr}.benefit-grid>div{padding-bottom:13px}.benefit-grid h3{margin-top:14px}.volume-grid{grid-template-columns:1fr}.volume-art{height:300px}.collection-banner{display:block;padding:30px}.collection-banner .btn{margin-top:20px}.footer-grid{grid-template-columns:1fr 1fr;gap:40px}.footer-grid>div:last-child{grid-column:1/-1}.footer-bottom{margin-top:45px;display:block}.footer-bottom span{display:block;margin-bottom:8px}.espelho-art-large{min-height:380px;transform:none}.espelho-art-large h2{font-size:39px}.espelho-art-large .large-flower{font-size:80px}}
 @media(max-width:390px){.nav a:nth-child(2){display:none}.hero-actions{align-items:stretch;flex-direction:column}.btn{width:100%}.product-main h1{font-size:50px}.product-facts{gap:8px}.collection-card{padding:30px}.collection-card h3{font-size:50px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
+
+/* October 2026 - Official editorial imagery and social channels */
+.volume-art-banner{height:190px;background:#f0e5dc;padding:0}
+.volume-banner-image{object-fit:contain;object-position:center}
+.editorial-banner-section{background:#fffdf8;padding:26px 0 50px}
+.editorial-banner-image{display:block;width:100%;height:auto;border-radius:8px;box-shadow:0 12px 32px rgba(38,44,37,.10)}
+.footer-social-title{margin-top:22px;margin-bottom:14px}
+.social-links{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+.social-links a{display:inline-flex;align-items:center;gap:8px;min-height:42px;border:1px solid rgba(179,190,167,.4);border-radius:100px;padding:8px 11px;font-size:11px;letter-spacing:0;color:inherit;text-decoration:none;transition:background .2s,border-color .2s}
+.social-links a:hover{background:rgba(159,184,153,.11);border-color:currentColor}
+.social-links a:focus-visible{outline:3px solid #a8cdb0;outline-offset:2px}
+.social-links img{width:21px;height:21px;object-fit:contain;flex-shrink:0}
+.social-links-compact{gap:7px}
+.social-links-compact a{min-height:38px;padding:6px 9px;font-size:10px}
+@media(max-width:750px){.volume-art-banner{height:180px}.editorial-banner-section{padding:15px 0 34px}.social-links{gap:7px}.social-links a{padding:7px 9px}}
