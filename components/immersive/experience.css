@@ -224,3 +224,6 @@ body:has(.lia-experience) > .site-header, body:has(.lia-experience) > .site-foot
 .lia-book-cover { display:block; width:min(150px,40%); height:auto; margin:4px 0 18px; border-radius:3px; box-shadow:0 14px 30px #3b261633 }
 .lia-book-more { display:block; margin-top:14px; font-size:13px; font-weight:600 }
 .lia-mirror-phrase.is-hidden p { opacity:0; animation:none; transition:opacity .2s }
+.lia-soon { display:inline-block; margin-left:8px; padding:2px 8px; border-radius:999px; background:#f3e7cf; color:#6b4a2b; font:600 10px/1.6 Arial,sans-serif; letter-spacing:.06em; text-transform:uppercase; vertical-align:middle }
+.lia-dialog.lia-chat-soon p.lia-chat-start { margin:22px 0 4px; font:24px/1.35 Georgia,serif; color:#364d3c }
+.lia-dialog.lia-chat-soon p.lia-chat-start small { font:12px/1.5 Arial,sans-serif }

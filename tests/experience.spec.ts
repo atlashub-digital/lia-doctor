@@ -51,7 +51,27 @@ test('HTML fallback, reduced motion, deep links and commercial pages remain avai
   const checkout = await request.get('/me-sentir-leve/tomei-mounjaro-e-agora'); expect(await checkout.text()).toContain('S108189606N');
 });
 
+const chatLive = process.env.NEXT_PUBLIC_LIA_CHAT_ENABLED === 'true';
+
+test('chat coming soon: every entry point says so, offers WhatsApp, never calls the API', async ({ page }) => {
+  test.skip(chatLive, 'live chat build');
+  let calls = 0; page.on('request', request => { if (request.url().includes('/api/lia/chat')) calls++; });
+  await page.goto('/experiencia');
+  await expect(page.getByRole('button', { name: /Conversar com a LIA/ }).filter({ hasText: 'muito em breve' }).first()).toBeVisible();
+  const opener = page.getByRole('button', { name: 'Conversar com a LIA, assistente IA' });
+  await opener.click();
+  const dialog = page.getByRole('dialog', { name: 'Conversar com a LIA' });
+  await expect(dialog).toContainText('A conversa com a LIA chega muito em breve.');
+  await expect(dialog.getByRole('link', { name: /grupo WhatsApp/ })).toHaveAttribute('href', 'https://chat.whatsapp.com/FHzvr72KCiYCzlQ7klCTN3');
+  await expect(dialog.getByRole('link', { name: /LIA no WhatsApp/ })).toHaveAttribute('href', 'https://wa.me/5515981383291');
+  await expect(dialog.getByLabel('A sua mensagem')).toHaveCount(0);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page.keyboard.press('Escape'); await expect(dialog).toHaveCount(0); await expect(opener).toBeFocused();
+  expect(calls).toBe(0);
+});
+
 test('chat real unavailable state, retry, no demo, Escape and focus restoration', async ({ page }) => {
+  test.skip(!chatLive, 'chat is "muito em breve" in this build');
   await page.goto('/experiencia');
   const opener = page.getByRole('button', { name: 'Conversar com a LIA, assistente IA' });
   await opener.click(); await expect(page.getByRole('dialog')).toBeVisible();
@@ -67,6 +87,7 @@ test('chat real unavailable state, retry, no demo, Escape and focus restoration'
 });
 
 test('chat controlled 200/429/502 response rendering and cancellation', async ({ page }) => {
+  test.skip(!chatLive, 'chat is "muito em breve" in this build');
   await page.goto('/experiencia'); await page.getByRole('button', { name: 'Abrir conversa com a LIA', exact: true }).click();
   for (const status of [200, 429, 502]) {
     await page.route('**/api/lia/chat', route => route.fulfill({ status, json: status === 200 ? { reply: 'Resposta controlada de teste.' } : { error: 'controlled' } }));

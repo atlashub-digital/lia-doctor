@@ -18,7 +18,7 @@ const centers = [-6.6, -2.2, 2.2, 6.6];
 gsap.ticker.lagSmoothing(0);
 const HOME = [0.4, 2.45, 11.7] as const;
 
-function Room({ index, focusBook, selectedBook, active, mobile, handlers }: { index: number; focusBook: string | null; selectedBook: string | null; active: boolean; mobile: boolean; handlers: BookHandlers }) {
+function Room({ index, focusBook, selectedBook, active, mobile, handlers, furnished }: { index: number; focusBook: string | null; selectedBook: string | null; active: boolean; mobile: boolean; handlers: BookHandlers; furnished: boolean }) {
   const room = rooms[index];
   const frame = useMemo(() => archFrame(), []);
   const doorShape = useMemo(() => archPath(new Shape(), 1.025), []);
@@ -34,7 +34,7 @@ function Room({ index, focusBook, selectedBook, active, mobile, handlers }: { in
       <mesh position={[1.025, 0, 0]} castShadow><extrudeGeometry args={[doorShape, { depth: .08, bevelEnabled: true, bevelSize: .015, bevelThickness: .015, bevelSegments: 2, curveSegments: 24 }]} /><meshStandardMaterial color={room.material} roughness={.8} /></mesh>
       <mesh position={[1.82, 1.6, .12]}><sphereGeometry args={[.045, 12, 8]} /><meshPhysicalMaterial color="#c2a46d" metalness={.7} roughness={.25} /></mesh>
     </group>
-    <ThemedRoom room={room.id} items={shelves[room.id].items} workbook={shelves[room.id].workbook} focusBook={focusBook} selectedBook={selectedBook} active={active} mobile={mobile} handlers={handlers} />
+    {furnished ? <ThemedRoom room={room.id} items={shelves[room.id].items} workbook={shelves[room.id].workbook} focusBook={focusBook} selectedBook={selectedBook} active={active} mobile={mobile} handlers={handlers} /> : null}
   </group>;
 }
 
@@ -46,9 +46,7 @@ function CameraJourney(props: Props) {
     const contextLost = (event: Event) => { event.preventDefault(); latest.current.onFailure(); };
     gl.domElement.addEventListener('webglcontextlost', contextLost);
     latest.current.onReady();
-    // Compile every room's materials in the background while the visitor is still in the átrio (all rooms share one
-    // light set), so entering a room or presenting a book does not stall on shader compilation later.
-    void gl.compileAsync(scene, camera).catch(() => {});
+    // Interiors furnished later are compiled by CompileWarmRooms as they arrive (all rooms share one light set).
     return () => gl.domElement.removeEventListener('webglcontextlost', contextLost);
   }, [gl]);
   useEffect(() => {
@@ -115,11 +113,37 @@ function LightRig({ room }: { room: RoomId | null }) {
   </>;
 }
 
+// Interiors are built on demand: the room being visited at once; from the átrio, the others one at a time while the main
+// thread is idle, so they are ready (and compiled) before the visitor reaches a door. Inside a room nothing else is
+// warmed, so background work never competes with opening a book; another room is furnished when the visitor heads to it.
+function useWarmRooms(current: RoomId | null) {
+  const [warm, setWarm] = useState<RoomId[]>(() => current ? [current] : []);
+  const add = (id: RoomId) => setWarm(list => list.includes(id) ? list : [...list, id]);
+  useEffect(() => { if (current) add(current); }, [current]);
+  useEffect(() => {
+    const next = rooms.find(room => !warm.includes(room.id));
+    if (!next || current) return;
+    let idle = 0;
+    const delay = window.setTimeout(() => {
+      idle = window.requestIdleCallback ? window.requestIdleCallback(() => add(next.id), { timeout: 2500 }) : window.setTimeout(() => add(next.id), 300);
+    }, warm.length ? 400 : 1200);
+    return () => { window.clearTimeout(delay); if (window.cancelIdleCallback) window.cancelIdleCallback(idle); else window.clearTimeout(idle); };
+  }, [warm, current]);
+  return warm;
+}
+
+function CompileWarmRooms({ count }: { count: number }) {
+  const { gl, scene, camera, invalidate } = useThree();
+  useEffect(() => { if (count) void gl.compileAsync(scene, camera).then(() => invalidate()).catch(() => {}); }, [count, gl, scene, camera, invalidate]);
+  return null;
+}
+
 export default function PortalScene(props: Props) {
   const [dpr, setDpr] = useState<number | [number, number]>([1, props.mobile ? 1.25 : 1.5]);
   // Stable handlers for the 3D books; they read the latest callbacks so the scene never re-renders for them.
   const latest = useRef(props); latest.current = props;
   const handlers = useMemo<BookHandlers>(() => ({ onHover: slug => latest.current.onHoverBook?.(slug), onSelect: slug => latest.current.onSelectBook?.(slug) }), []);
+  const warm = useWarmRooms(props.room);
   return <Canvas frameloop="demand" dpr={dpr} shadows camera={{ position: [...HOME], fov: 43, near: .08, far: 45 }} gl={{ antialias: true, alpha: false, powerPreference: 'default' }} fallback={<span />} onCreated={({ gl }) => { gl.setClearColor(new Color('#e6d7bd')); }}>
     {/* Drop to DPR 1 when the device cannot hold the frame rate (reflection + shadows are the heavy passes). */}
     <PerformanceMonitor onDecline={() => setDpr(1)} />
@@ -128,7 +152,8 @@ export default function PortalScene(props: Props) {
     <group position={[centers[Math.max(0, rooms.findIndex(room => room.id === props.room))], 0, 0]}><InteriorLights room={props.room ?? 'espelho-meu'} /></group>
     <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -.02, -2]}><planeGeometry args={[30, 32]} /><meshPhysicalMaterial color="#e3cfac" roughness={.52} metalness={.03} /></mesh>
     {Array.from({ length: 14 }, (_, i) => <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, -.012, -12 + i * 1.3]}><planeGeometry args={[25, .012]} /><meshStandardMaterial color="#c7b592" /></mesh>)}
-    {rooms.map((room, i) => <Room key={room.id} index={i} focusBook={props.focusBook ?? null} selectedBook={props.room === room.id && !props.travelling ? props.selectedBook ?? null : null} active={props.room === room.id && !props.travelling} mobile={props.mobile} handlers={handlers} />)}
+    {rooms.map((room, i) => <Room key={room.id} index={i} focusBook={props.focusBook ?? null} selectedBook={props.room === room.id && !props.travelling ? props.selectedBook ?? null : null} active={props.room === room.id && !props.travelling} mobile={props.mobile} handlers={handlers} furnished={warm.includes(room.id)} />)}
+    <CompileWarmRooms count={warm.length} />
     {[-4.4, 0, 4.4].map(x => <mesh key={x} receiveShadow castShadow position={[x, 2.1, -.01]}><boxGeometry args={[1.9, 4.2, .35]} /><meshStandardMaterial color="#deceb3" roughness={.95} /></mesh>)}
     <Plant position={[-5.7, 0, 1]} scale={1.5} /><Plant position={[6, 0, .3]} scale={1.7} />
     <Chair position={[-5, 0, 3.5]} />

@@ -81,3 +81,17 @@ export function ChatPanel({ onClose, voiceEnabled }: { onClose: () => void; voic
     </form>
   </FocusDialog>;
 }
+
+// Shown while NEXT_PUBLIC_LIA_CHAT_ENABLED is not "true". Turning the variable on (with LIA_API_URL, LIA_SERVICE_TOKEN
+// and Redis configured) swaps every entry point back to the live ChatPanel; no code change is needed.
+export function ChatSoon({ onClose }: { onClose: () => void }) {
+  return <FocusDialog title="Conversar com a LIA" onClose={onClose} className="lia-chat-dialog lia-chat-soon">
+    <div className="lia-chat-identity"><span className="lia-avatar" aria-hidden="true" /><div><strong>LIA · Assistente IA</strong><small>Conversa no site · muito em breve</small></div></div>
+    <p className="lia-chat-start">A conversa com a LIA chega muito em breve.<small>Estamos a preparar uma experiência cuidada, com segurança e privacidade.</small></p>
+    <p className="lia-chat-notice">Até lá, acompanhe a LIA no grupo de WhatsApp ou fale connosco diretamente. Evite partilhar dados pessoais ou clínicos.</p>
+    <nav className="lia-dialog-links" aria-label="Contactos enquanto o chat não abre">
+      <a href="https://chat.whatsapp.com/FHzvr72KCiYCzlQ7klCTN3" target="_blank" rel="noopener noreferrer">Entrar no grupo WhatsApp <span aria-hidden="true">↗</span></a>
+      <a href="https://wa.me/5515981383291" target="_blank" rel="noopener noreferrer">Enviar mensagem à LIA no WhatsApp <span aria-hidden="true">↗</span></a>
+    </nav>
+  </FocusDialog>;
+}
