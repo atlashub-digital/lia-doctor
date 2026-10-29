@@ -6,8 +6,7 @@ import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
 import { Component, useEffect, useRef, useState, type CSSProperties, type ErrorInfo, type ReactNode } from 'react';
 import { books, canonicalImage, cropStyle, findRoom, hotspotStyle, mirrorReflection, rooms, sceneManifest, type RoomId } from '@/lib/immersive';
-import { espelhoOffers, findOffer, type Offer } from '@/lib/offers';
-import { bannerForEspelho } from '@/lib/editorial-banners';
+import { findShelfItem, shelves, type ShelfItem } from '@/lib/shelves';
 import { HotmartCheckout } from '@/components/HotmartCheckout';
 import Image from 'next/image';
 import { ChatPanel } from './ChatPanel';
@@ -32,8 +31,9 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
   const pathname = usePathname();
   const router = useRouter();
   const selected = findRoom(pathname.split('/')[2]);
-  // Shareable selection: /experiencia/espelho-meu/<volume> opens that volume's editorial sheet.
-  const roomBook = selected?.id === 'espelho-meu' ? findOffer(pathname.split('/')[3]) : undefined;
+  // Shareable selection: /experiencia/<room>/<volume> opens that volume's editorial sheet.
+  const roomBook = findShelfItem(selected?.id, pathname.split('/')[3]);
+  const shelf = selected ? shelves[selected.id] : undefined;
   const [travelling, setTravelling] = useState<RoomId | null>(null);
   const [phase, setPhase] = useState('idle');
   const [webgl, setWebgl] = useState(false);
@@ -87,12 +87,13 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
   function openBook(slug: string) {
     if (slug === roomBook?.slug) return;
     openedHere.current = !roomBook;
-    if (roomBook) router.replace(`/experiencia/espelho-meu/${slug}`, { scroll: false });
-    else router.push(`/experiencia/espelho-meu/${slug}`, { scroll: false });
+    if (!selected) return;
+    if (roomBook) router.replace(`/experiencia/${selected.id}/${slug}`, { scroll: false });
+    else router.push(`/experiencia/${selected.id}/${slug}`, { scroll: false });
   }
   function closeBook() {
     if (openedHere.current) router.back();
-    else router.push('/experiencia/espelho-meu', { scroll: false });
+    else if (selected) router.push(`/experiencia/${selected.id}`, { scroll: false });
   }
 
   useEffect(() => {
@@ -121,7 +122,7 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
         <picture><source media="(min-width: 768px)" srcSet={desktopPhoto.srcSet} sizes="100vw" /><img src={transparentPixel} alt={desktopPhoto.alt} fetchPriority="high" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} /></picture>
       </div>
 
-      {canRender ? <div className={`lia-canvas ${activeScene ? 'is-active' : ''} ${selected?.id === 'espelho-meu' && !travelling ? 'is-interactive' : ''}`} aria-hidden="true">
+      {canRender ? <div className={`lia-canvas ${activeScene ? 'is-active' : ''} ${shelf?.items.length && !travelling ? 'is-interactive' : ''}`} aria-hidden="true">
         <SceneBoundary onFailure={sceneFailed}><PortalScene room={current} travelling={travelling !== null} mobile={mobile} focusBook={focusBook} selectedBook={roomBook?.slug ?? null} onHoverBook={setFocusBook} onSelectBook={openBook} onReady={() => setReady(true)} onFailure={sceneFailed} onPhase={setPhase} onArrive={() => { if (travelling) { setPhase('room-ready'); router.push(`/experiencia/${travelling}`); } }} /></SceneBoundary>
       </div> : null}
 
@@ -153,8 +154,8 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
           <a href={selected.destination} className="lia-pill" {...(selected.destination.startsWith('https:') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{selected.cta} <span aria-hidden="true">→</span></a>
           <button className="lia-text-button" onClick={() => setChat(true)}>Conversar com a LIA <span aria-hidden="true">↗</span></button>
         </article>
-        {selected.id === 'espelho-meu' ? <LivingLibrary active={focusBook} selectedSlug={roomBook?.slug ?? null} onFocus={setFocusBook} onOpen={openBook} mirrorShown={canRender && !mobile} /> : null}
-        {roomBook ? <BookSheet key={roomBook.slug} offer={roomBook} headingRef={sheetHeading} onClose={closeBook} showCover={!canRender || mobile} /> : null}
+        {shelf?.items.length ? <LivingLibrary room={selected.id} heading={shelf.heading} items={shelf.items} active={focusBook} selectedSlug={roomBook?.slug ?? null} onFocus={setFocusBook} onOpen={openBook} reflection={selected.id === 'espelho-meu' ? (canRender && !mobile ? 'hidden' : 'shown') : 'none'} /> : null}
+        {roomBook ? <BookSheet key={roomBook.slug} item={roomBook} headingRef={sheetHeading} onClose={closeBook} showCover={!canRender} /> : null}
         <nav className="lia-room-switcher" aria-label="Outras salas">{rooms.filter(room => room.id !== selected.id).map(room => <Link key={room.id} href={`/experiencia/${room.id}`}>{room.label} <span aria-hidden="true">↗</span></Link>)}</nav>
       </div> : null}
       {travelling ? <button className="lia-cancel" onClick={() => { setTravelling(null); setPhase('idle'); }}>Cancelar entrada</button> : null}
@@ -180,28 +181,31 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
   </div>;
 }
 
-// Signature move of the Golden Room: focusing a volume here pulls the same volume out of the 3D niche; choosing it
-// carries the book to the visitor and opens its sheet. The list is the keyboard/screen-reader path to the same state.
-function LivingLibrary({ active, selectedSlug, onFocus, onOpen, mirrorShown }: { active: string | null; selectedSlug: string | null; onFocus: (slug: string | null) => void; onOpen: (slug: string) => void; mirrorShown: boolean }) {
-  const book = espelhoOffers.find(item => item.slug === active);
+// Signature move of the rooms: focusing a volume here pulls the same volume out of the 3D shelf; choosing it carries
+// the book to the visitor and opens its sheet. The list is the keyboard/screen-reader path to the same state.
+function LivingLibrary({ room, heading, items, active, selectedSlug, onFocus, onOpen, reflection }: {
+  room: RoomId; heading: string; items: ShelfItem[]; active: string | null; selectedSlug: string | null;
+  onFocus: (slug: string | null) => void; onOpen: (slug: string) => void; reflection: 'shown' | 'hidden' | 'none';
+}) {
+  const book = items.find(item => item.slug === active);
   return <section className="lia-library" aria-labelledby="lia-library-heading" onMouseLeave={() => onFocus(null)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) onFocus(null); }}>
-    <p className={mirrorShown ? 'lia-sr' : 'lia-library-reflection'}>{mirrorReflection}</p>
-    <h3 id="lia-library-heading" className="lia-eyebrow">Livraria EspelhoMeu · Cinco volumes</h3>
+    {reflection === 'none' ? null : <p className={reflection === 'hidden' ? 'lia-sr' : 'lia-library-reflection'}>{mirrorReflection}</p>}
+    <h3 id="lia-library-heading" className="lia-eyebrow">{heading}</h3>
     <ol className="lia-library-list">
-      {espelhoOffers.map(item => <li key={item.slug}><Link href={`/experiencia/espelho-meu/${item.slug}`} scroll={false} data-volume={item.slug}
+      {items.map(item => <li key={item.slug}><Link href={`/experiencia/${room}/${item.slug}`} scroll={false} data-volume={item.slug}
         aria-current={selectedSlug === item.slug ? 'true' : undefined} aria-describedby={active === item.slug ? 'lia-library-label' : undefined}
         className={active === item.slug || selectedSlug === item.slug ? 'is-focused' : undefined} onMouseEnter={() => onFocus(item.slug)} onFocus={() => onFocus(item.slug)}
         onClick={event => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && event.button === 0) { event.preventDefault(); onOpen(item.slug); } }}>
-        <span className="lia-library-code">{item.code}</span>{item.title}</Link></li>)}
+        <Image className="lia-library-cover" src={item.cover} alt="" width={36} height={52} /><span className="lia-library-code">{item.code}</span>{item.title}</Link></li>)}
     </ol>
     <div id="lia-library-label" className="lia-library-label" aria-live="polite">
-      {book ? <><span className="lia-eyebrow">{book.eyebrow}</span><p>{book.description}</p><small>{book.details}</small></> : <small>Escolha um volume para o ver de perto.</small>}
+      {book ? <><span className="lia-eyebrow">{book.kicker}</span><p>{book.short}</p></> : <small>Escolha um livro para o ver de perto.</small>}
     </div>
   </section>;
 }
 
-// Editorial sheet for the presented volume: printed-paper treatment, real catalogue copy, Hotmart only when confirmed.
-function BookSheet({ offer, headingRef, onClose, showCover }: { offer: Offer; headingRef: React.RefObject<HTMLHeadingElement | null>; onClose: () => void; showCover: boolean }) {
+// Editorial sheet for the presented volume: printed-paper treatment, real catalogue copy, Hotmart checkout.
+function BookSheet({ item, headingRef, onClose, showCover }: { item: ShelfItem; headingRef: React.RefObject<HTMLHeadingElement | null>; onClose: () => void; showCover: boolean }) {
   const close = useRef(onClose); close.current = onClose;
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -212,27 +216,25 @@ function BookSheet({ offer, headingRef, onClose, showCover }: { offer: Offer; he
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
-  const live = offer.commerce.status === 'live' ? offer.commerce : null;
   return <section className="lia-book-sheet" role="dialog" aria-modal="false" aria-labelledby="lia-book-title">
     <button className="lia-book-close" onClick={onClose} aria-label="Fechar a ficha e devolver o livro à estante"><span aria-hidden="true">×</span></button>
-    {/* Without the 3D book (no WebGL, reduced motion, mobile layout), the official banner carries the cover art. */}
-    {showCover ? <Image className="lia-book-banner" src={bannerForEspelho(offer.slug)} alt={`Banner oficial: ${offer.title}`} width={2172} height={724} sizes="(max-width: 767px) 92vw, 420px" /> : null}
-    <span className="lia-eyebrow">{offer.collection} · Volume {offer.code}</span>
-    <h2 id="lia-book-title" ref={headingRef} tabIndex={-1}>{offer.title}</h2>
-    <p className="lia-book-kicker">{offer.eyebrow}</p>
-    <p className="lia-book-synopsis">{offer.synopsis}</p>
+    {/* Without the 3D book (no WebGL, reduced motion, mobile layout), the official cover sits at the top of the sheet. */}
+    {showCover ? <Image className="lia-book-cover" src={item.cover} alt={`Capa de ${item.title}`} width={500} height={760} sizes="(max-width: 767px) 40vw, 160px" /> : null}
+    <span className="lia-eyebrow">{item.collection} · {item.code}</span>
+    <h2 id="lia-book-title" ref={headingRef} tabIndex={-1}>{item.title}</h2>
+    <p className="lia-book-kicker">{item.kicker}</p>
+    <p className="lia-book-synopsis">{item.synopsis}</p>
     <h3 className="lia-eyebrow">Inclui</h3>
-    <ul className="lia-book-includes">{offer.includes.map(item => <li key={item}>{item}</li>)}</ul>
+    <ul className="lia-book-includes">{item.includes.map(entry => <li key={entry}>{entry}</li>)}</ul>
     <dl className="lia-book-facts">
-      <div><dt>Coleção</dt><dd>{offer.collection}</dd></div>
-      <div><dt>Referência</dt><dd>{offer.productCode}</dd></div>
-      <div><dt>Compra e entrega</dt><dd>{live ? 'Hotmart' : 'Em preparação nesta loja'}</dd></div>
+      <div><dt>Coleção</dt><dd>{item.collection}</dd></div>
+      <div><dt>Referência</dt><dd>{item.code}</dd></div>
+      <div><dt>Compra e entrega</dt><dd>Hotmart</dd></div>
     </dl>
-    <p className="lia-book-notice">{offer.notice}</p>
-    {live ? <>
-      <HotmartCheckout label="Comprar na Hotmart" checkout={live.checkout} className="lia-pill lia-book-buy" fallback={false} />
-      <p className="lia-book-fineprint">Pagamento seguro e entrega feitos pela Hotmart.</p>
-    </> : <p className="lia-book-pending" role="note">A compra deste volume nesta loja está em preparação.</p>}
+    <p className="lia-book-notice">{item.notice}</p>
+    <HotmartCheckout label="Comprar na Hotmart" checkout={item.checkout} className="lia-pill lia-book-buy" fallback={false} />
+    <p className="lia-book-fineprint">Pagamento seguro e entrega feitos pela Hotmart.</p>
+    <Link className="lia-text-button lia-book-more" href={item.salesPath}>Ver a página completa do livro <span aria-hidden="true">→</span></Link>
     <button className="lia-text-button lia-book-return" onClick={onClose}>Devolver à estante</button>
   </section>;
 }

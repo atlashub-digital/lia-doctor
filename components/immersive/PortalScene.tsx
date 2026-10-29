@@ -4,10 +4,11 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { RoundedBox, ContactShadows, PerformanceMonitor } from '@react-three/drei';
 import { gsap } from 'gsap';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Color, DoubleSide, Shape, SRGBColorSpace, TextureLoader, Vector3, type AmbientLight, type DirectionalLight, type Group, type HemisphereLight } from 'three';
-import { sceneTexture, rooms, type RoomId } from '@/lib/immersive';
-import { EspelhoMeuRoom } from './rooms/EspelhoMeuRoom';
-import { archFrame, archPath, Chair, Plant, usePlaster } from './scene-kit';
+import { Color, Shape, Vector3, type AmbientLight, type DirectionalLight, type Group, type HemisphereLight } from 'three';
+import { rooms, type RoomId } from '@/lib/immersive';
+import { InteriorLights, ThemedRoom } from './rooms/ThemedRoom';
+import { shelves } from '@/lib/shelves';
+import { archFrame, archPath, Chair, Plant } from './scene-kit';
 
 type BookHandlers = { onHover: (slug: string | null) => void; onSelect: (slug: string) => void };
 type Props = { room: RoomId | null; travelling: boolean; mobile: boolean; focusBook?: string | null; selectedBook?: string | null; onHoverBook?: (slug: string | null) => void; onSelectBook?: (slug: string) => void; onReady: () => void; onFailure: () => void; onPhase: (phase: string) => void; onArrive: () => void };
@@ -33,55 +34,7 @@ function Room({ index, focusBook, selectedBook, active, mobile, handlers }: { in
       <mesh position={[1.025, 0, 0]} castShadow><extrudeGeometry args={[doorShape, { depth: .08, bevelEnabled: true, bevelSize: .015, bevelThickness: .015, bevelSegments: 2, curveSegments: 24 }]} /><meshStandardMaterial color={room.material} roughness={.8} /></mesh>
       <mesh position={[1.82, 1.6, .12]}><sphereGeometry args={[.045, 12, 8]} /><meshPhysicalMaterial color="#c2a46d" metalness={.7} roughness={.25} /></mesh>
     </group>
-    {room.id === 'espelho-meu' ? <EspelhoMeuRoom focusBook={focusBook} selectedBook={selectedBook} active={active} mobile={mobile} handlers={handlers} /> : <LegacyInterior index={index} />}
-  </group>;
-}
-
-// V1 procedural interior, kept unchanged for the three rooms that S3 has not reached yet.
-function LegacyInterior({ index }: { index: number }) {
-  const room = rooms[index];
-  const { invalidate } = useThree();
-  // Photo fragments are set dressing at the back, never the navigable room itself.
-  const texture = useMemo(() => {
-    const source = new TextureLoader().load(sceneTexture, () => invalidate());
-    source.colorSpace = SRGBColorSpace;
-    source.repeat.set(290 / 1672, 160 / 941);
-    source.offset.set(15 / 1672, 1 - 460 / 941);
-    return source;
-  }, [room, invalidate]);
-  const plaster = usePlaster();
-  useEffect(() => () => texture.dispose(), [texture]);
-
-  return <group>
-    <mesh receiveShadow position={[0, 2.1, -10]}><boxGeometry args={[4.35, 4.2, .2]} /><meshStandardMaterial color={room.material} roughness={.95} bumpMap={plaster} bumpScale={.018} /></mesh>
-    {[-2.15, 2.15].map(x => <mesh key={x} receiveShadow position={[x, 2.1, -5]}><boxGeometry args={[.15, 4.2, 10]} /><meshStandardMaterial color={index === 1 ? '#bdc5ac' : '#f1e3cd'} roughness={1} bumpMap={plaster} bumpScale={.015} /></mesh>)}
-    <mesh receiveShadow position={[0, .015, -5]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[4.3, 10]} /><meshPhysicalMaterial color="#ead9bd" roughness={.7} metalness={.03} bumpMap={plaster} bumpScale={.012} /></mesh>
-    {index !== 0 ? <group position={[0, 2.3, -9.85]}>
-      <mesh><planeGeometry args={[2.4, 1.7]} /><meshBasicMaterial map={texture} side={DoubleSide} /></mesh>
-      {[-1.24, 1.24].map(x => <mesh key={x} position={[x, 0, .025]}><boxGeometry args={[.09, 1.85, .12]} /><meshStandardMaterial color="#bb9c72" roughness={.65} /></mesh>)}
-      {[-.9, .9].map(y => <mesh key={y} position={[0, y, .025]}><boxGeometry args={[2.55, .09, .12]} /><meshStandardMaterial color="#bb9c72" roughness={.65} /></mesh>)}
-      <mesh position={[0, 0, .04]}><boxGeometry args={[.04, 1.75, .1]} /><meshStandardMaterial color="#d0bd9a" /></mesh>
-    </group> : null}
-    <mesh position={[.35, .04, -7.5]} rotation={[-Math.PI / 2, 0, 0]} scale={[1.35, 1, 1]}><circleGeometry args={[1.2, 48]} /><meshStandardMaterial color={index === 0 ? '#d6b2a0' : '#c5bb9c'} roughness={1} bumpMap={plaster} bumpScale={.018} /></mesh>
-    {index === 2 ? <group>
-      <mesh castShadow position={[1, .5, -8.5]}><sphereGeometry args={[.48, 32, 24]} /><meshPhysicalMaterial color="#7a7867" roughness={.38} metalness={.48} /></mesh>
-      <RoundedBox args={[1.55, .06, .7]} radius={.025} position={[0, .07, -7.3]} rotation={[0, .18, 0]}><meshStandardMaterial color="#70816a" roughness={.9} /></RoundedBox>
-      {[-.7, .7].map(x => <mesh key={x} castShadow position={[x, 1.6, -9.65]}><boxGeometry args={[.11, 3, .12]} /><meshStandardMaterial color="#806548" /></mesh>)}
-      {[.5, 1.1, 1.7, 2.3, 2.9].map(y => <mesh key={y} position={[0, y, -9.65]} rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[.025, .025, 1.4, 12]} /><meshStandardMaterial color="#af9269" /></mesh>)}
-    </group> : <Chair position={[.6, 0, -8.4]} color={index === 0 ? '#edd0c0' : '#e4d8c0'} />}
-    {index === 0 ? <group position={[.25, 2.4, -9.8]}>
-      <mesh><circleGeometry args={[.56, 64]} /><meshPhysicalMaterial color="#c6c9ba" metalness={.94} roughness={.16} /></mesh>
-      <mesh position={[0, 0, .025]}><torusGeometry args={[.58, .024, 12, 64]} /><meshPhysicalMaterial color="#b3955d" metalness={.75} roughness={.27} /></mesh>
-    </group> : null}
-    <group position={[-1.5, 0, -9.55]}>
-      {[-.4, .4].map(x => <mesh key={x} position={[x, 1.25, 0]}><boxGeometry args={[.06, 2.5, .38]} /><meshStandardMaterial color="#9e805b" roughness={.85} /></mesh>)}
-      {[.2, .8, 1.4, 2, 2.6].map((y, shelf) => <group key={y}><mesh position={[0, y, 0]}><boxGeometry args={[.88, .05, .4]} /><meshStandardMaterial color="#b1936b" /></mesh>{shelf < 4 ? [0, 1, 2, 3].map(book => <mesh key={book} position={[-.26 + book * .15, y + .19, .015]} rotation={[0, 0, book === 3 ? -.12 : 0]}><boxGeometry args={[.1, .32 + (book % 2) * .06, .23]} /><meshStandardMaterial color={['#485d46', '#d9bc94', '#efe1c5', '#a2745c'][book]} roughness={.9} /></mesh>) : null}</group>)}
-    </group>
-    <Plant position={[1.65, 0, -9]} scale={.8} />
-    <mesh castShadow position={[1.3, .3, -7.2]}><cylinderGeometry args={[.32, .28, .58, 32]} /><meshStandardMaterial color="#ba9b72" roughness={.85} /></mesh>
-    <mesh castShadow position={[1.3, .62, -7.2]}><cylinderGeometry args={[.36, .36, .06, 32]} /><meshPhysicalMaterial color="#d4c4a6" roughness={.6} /></mesh>
-    <pointLight position={[0, 3.3, -7]} color={index === 0 ? '#ffd4b6' : '#fff0d3'} intensity={14} distance={9} decay={2} />
-    <mesh position={[0, 3.7, -7]}><sphereGeometry args={[.07, 16, 8]} /><meshStandardMaterial color="#fff0cc" emissive="#ffe2a6" emissiveIntensity={1.6} /></mesh>
+    <ThemedRoom room={room.id} items={shelves[room.id].items} workbook={shelves[room.id].workbook} focusBook={focusBook} selectedBook={selectedBook} active={active} mobile={mobile} handlers={handlers} />
   </group>;
 }
 
@@ -93,6 +46,9 @@ function CameraJourney(props: Props) {
     const contextLost = (event: Event) => { event.preventDefault(); latest.current.onFailure(); };
     gl.domElement.addEventListener('webglcontextlost', contextLost);
     latest.current.onReady();
+    // Compile every room's materials in the background while the visitor is still in the átrio (all rooms share one
+    // light set), so entering a room or presenting a book does not stall on shader compilation later.
+    void gl.compileAsync(scene, camera).catch(() => {});
     return () => gl.domElement.removeEventListener('webglcontextlost', contextLost);
   }, [gl]);
   useEffect(() => {
@@ -124,7 +80,7 @@ function CameraJourney(props: Props) {
   return null;
 }
 
-// Lobby lighting, dimmed only while the camera is inside the EspelhoMeu room (interior lit by its own windows).
+// Lobby lighting, dimmed while the camera is inside a room (interiors are lit by their own window light).
 // The blend follows camera depth, so crossing the threshold reads as walking from the terrace into shade.
 const LOBBY = { ambient: .8, hemisphere: 1.6, sun: 3.2 };
 const INTERIOR = { ambient: .06, hemisphere: .22, sun: 1 };
@@ -138,8 +94,14 @@ function LightRig({ room }: { room: RoomId | null }) {
     gl.domElement.addEventListener('lia:scene-changed', refresh);
     return () => { gl.domElement.removeEventListener('lia:scene-changed', refresh); gl.shadowMap.autoUpdate = true; };
   }, [gl]);
+  useEffect(() => {
+    // The interior lights move with the room: refresh shadows (and the cached mirror reflection) for the new room even
+    // when the camera was already inside the previous one.
+    gl.shadowMap.needsUpdate = true;
+    gl.domElement.dispatchEvent(new Event('lia:scene-changed'));
+  }, [gl, room]);
   useFrame(({ camera }) => {
-    const inside = room === 'espelho-meu' ? Math.min(1, Math.max(0, -camera.position.z / 2.8)) : 0;
+    const inside = room ? Math.min(1, Math.max(0, -camera.position.z / 2.8)) : 0;
     const still = inside === 1;
     if (still !== settled.current) { settled.current = still; gl.shadowMap.autoUpdate = !still; gl.shadowMap.needsUpdate = true; }
     const blend = (key: keyof typeof LOBBY) => LOBBY[key] + (INTERIOR[key] - LOBBY[key]) * inside;
@@ -162,6 +124,8 @@ export default function PortalScene(props: Props) {
     {/* Drop to DPR 1 when the device cannot hold the frame rate (reflection + shadows are the heavy passes). */}
     <PerformanceMonitor onDecline={() => setDpr(1)} />
     <LightRig room={props.room} />
+    {/* Interior key + fill follow the active room (EspelhoMeu by default, so the light count never changes). */}
+    <group position={[centers[Math.max(0, rooms.findIndex(room => room.id === props.room))], 0, 0]}><InteriorLights room={props.room ?? 'espelho-meu'} /></group>
     <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -.02, -2]}><planeGeometry args={[30, 32]} /><meshPhysicalMaterial color="#e3cfac" roughness={.52} metalness={.03} /></mesh>
     {Array.from({ length: 14 }, (_, i) => <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, -.012, -12 + i * 1.3]}><planeGeometry args={[25, .012]} /><meshStandardMaterial color="#c7b592" /></mesh>)}
     {rooms.map((room, i) => <Room key={room.id} index={i} focusBook={props.focusBook ?? null} selectedBook={props.room === room.id && !props.travelling ? props.selectedBook ?? null : null} active={props.room === room.id && !props.travelling} mobile={props.mobile} handlers={handlers} />)}

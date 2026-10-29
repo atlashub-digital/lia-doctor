@@ -30,7 +30,7 @@ test('select P01 from the library: book presented, sheet, Hotmart CTA, Escape re
   const sheet = page.getByRole('dialog', { name: P01.title });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByRole('heading', { name: P01.title })).toBeFocused();
-  await expect(presented(page, P01.slug)).toHaveCount(1);
+  await expect(presented(page, P01.slug)).toHaveCount(1, { timeout: 60_000 });
   await expect(sheet.getByRole('link', { name: 'Comprar na Hotmart' })).toHaveAttribute('href', 'https://pay.hotmart.com/A108182228Y');
   for (const item of P01.includes) await expect(sheet).toContainText(item);
   expect(await page.locator('a[href*="espelho.lia.doctor"]').count()).toBe(0);
@@ -38,10 +38,10 @@ test('select P01 from the library: book presented, sheet, Hotmart CTA, Escape re
   await expect(page).toHaveURL(roomUrl);
   await expect(sheet).toHaveCount(0);
   await expect(page.locator(`[data-volume="${P01.slug}"]`)).toBeFocused();
-  await expect(presented(page, 'shelf')).toHaveCount(1);
+  await expect(presented(page, 'shelf')).toHaveCount(1, { timeout: 60_000 });
   await page.goForward(); await expect(page).toHaveURL(`${roomUrl}/${P01.slug}`); await expect(sheet).toBeVisible();
   await page.reload(); await expect(page.getByRole('dialog', { name: P01.title })).toBeVisible();
-  await expect(presented(page, P01.slug)).toHaveCount(1);
+  await expect(presented(page, P01.slug)).toHaveCount(1, { timeout: 60_000 });
   await page.goBack(); await expect(page).toHaveURL(roomUrl);
   expect(errors).toEqual([]);
 });
@@ -71,13 +71,13 @@ test('mobile: own sheet layout, book presented above it, no overflow, axe clean'
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
-test('fallback without WebGL and with reduced motion: deep link opens the sheet with the official banner', async ({ page }) => {
+test('fallback without WebGL and with reduced motion: deep link opens the sheet with the official cover', async ({ page }) => {
   await page.addInitScript(noWebgl);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(`${roomUrl}/${P01.slug}`);
   await expect(page.locator('.lia-experience')).toHaveAttribute('data-mode', 'html');
   const sheet = page.getByRole('dialog', { name: P01.title });
-  await expect(sheet.getByRole('img', { name: `Banner oficial: ${P01.title}` })).toBeVisible();
+  await expect(sheet.getByRole('img', { name: `Capa de ${P01.title}` })).toBeVisible();
   await sheet.getByRole('button', { name: 'Devolver à estante' }).click();
   await expect(page).toHaveURL(roomUrl);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);

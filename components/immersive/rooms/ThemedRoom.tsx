@@ -11,20 +11,33 @@ import {
 import { Reflector } from 'three/examples/jsm/objects/Reflector.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { mirrorReflection } from '@/lib/immersive';
-import { espelhoOffers, type Offer } from '@/lib/offers';
+import type { RoomId } from '@/lib/immersive';
+import { workbookCover, type ShelfItem } from '@/lib/shelves';
 import { archFrame, archPath } from '../scene-kit';
 import { bookcloth, coastView, limePlaster, linen, oak, pendingCover, spineLabel, travertine } from './espelho-materials';
 
-// Golden Room "Galeria do Reflexo" (V1.1 S2, look-dev pass over the approved blockout).
-// Layer contract: docs/immersive/05_V11_S1_AUDIT_GOLDEN_ROOM.md §3. Look-dev notes: 06_V11_G2_GOLDEN_ROOM_LOOKDEV.md.
+// Themed rooms of the LIA house. The EspelhoMeu Golden Room (V1.1 look-dev, docs 05–06) is the reference kit; each
+// theme swaps palette, furniture and shelf: EspelhoMeu "Galeria do Reflexo", Me Sentir Leve "Jardim da Leveza",
+// Corpo "Atelier da Força Serena", Mente & Calma "Sala da Pausa".
 // Local space: x ∈ [-2.15, 2.15], z ∈ [-10, 0]; the arrival camera sits at (0, 1.65, -2.8) looking at z = -9.
 const WIDTH = 4.3, HALF = WIDTH / 2, HEIGHT = 4.2;
-const coverTones = ['#e7b59c', '#cf9a8b', '#efcdb8', '#b9806a', '#efe0d0'];
-// The five official volumes stand spine-out together on the middle shelf, in catalogue order (P01–P05).
-const VOLUME_X = [-.17, -.105, -.04, .025, .09], VOLUME_SHELF = 1.22;
+type Theme = {
+  wall: [string, string]; arch: [string, string]; floor: [string, string]; stone: [string, string];
+  upA: string; upB: string; wood: string; tones: string[]; rug: 'a' | 'b';
+  furniture: 'salon' | 'garden' | 'atelier' | 'pause'; sun: number;
+};
+export const THEMES: Record<RoomId, Theme> = {
+  'espelho-meu': { wall: ['#dcc2a4', '#c6a483'], arch: ['#e9b69c', '#d59c82'], floor: ['#d9c19f', '#c3a37c'], stone: ['#e6d6be', '#cdb593'], upA: '#d9a493', upB: '#ecc5ae', wood: '#c9a57c', tones: ['#e7b59c', '#cf9a8b', '#efcdb8', '#b9806a', '#efe0d0'], rug: 'b', furniture: 'salon', sun: 1 },
+  'me-sentir-leve': { wall: ['#e0d9c4', '#c9c4a8'], arch: ['#56715b', '#435e4a'], floor: ['#d8c6a6', '#c2ab87'], stone: ['#e6dcc6', '#cdbf9f'], upA: '#9daf91', upB: '#efe6d2', wood: '#b8956a', tones: ['#3f5e4b', '#9daf91', '#e5d7c0', '#6f7d57', '#d8c6a6'], rug: 'a', furniture: 'garden', sun: 1 },
+  corpo: { wall: ['#e2d3bb', '#cdb896'], arch: ['#d8c6a7', '#c4ae88'], floor: ['#cdb48f', '#b89a72'], stone: ['#e3d6bf', '#cbb894'], upA: '#3d6b5a', upB: '#e8dbc2', wood: '#a8885b', tones: ['#24493e', '#e8dbc2', '#a8885b', '#70816a', '#d8c6a7'], rug: 'a', furniture: 'atelier', sun: 1.1 },
+  'mente-e-calma': { wall: ['#e9e2d2', '#d6cdb8'], arch: ['#a3b3a0', '#8fa08c'], floor: ['#ddd0b8', '#c9b998'], stone: ['#eae2d1', '#d3c7ae'], upA: '#c9d2c2', upB: '#f2ebde', wood: '#c2a27a', tones: ['#a3b3a0', '#dccfb7', '#efe6d6', '#8fa08c', '#c9b998'], rug: 'b', furniture: 'pause', sun: .75 },
+};
+// The room's official volumes stand spine-out together on the middle shelf, in catalogue order.
+const VOLUME_SHELF = 1.22;
+const volumeX = (count: number) => Array.from({ length: count }, (_, i) => -.04 + (i - (count - 1) / 2) * .065);
 // Where a selected volume is presented, in room space (arrival camera at z = -2.8). Desktop leaves the right third
 // to the editorial sheet; mobile lifts the book above the bottom sheet.
-const PRESENT = { desktop: { x: -.2, y: 1.6, z: -4.35, scale: 1.55 }, mobile: { x: 0, y: 2.02, z: -4.3, scale: .92 } };
+const PRESENT = { desktop: { x: -.2, y: 1.6, z: -4.35, scale: 1.55 }, mobile: { x: 0, y: 2.06, z: -4.3, scale: .66 } };
 const NICHE_X = .12, NICHE_Z = -9.86;
 // Coastal window in the back wall, right of the niche.
 const WINDOW = { x: 1.62, half: .42, sill: .55, spring: 2.55 };
@@ -70,7 +83,7 @@ function useDisposable<T extends { dispose: () => void }>(factory: () => T[], de
 }
 
 // All materials of the room, built once. Procedural maps stand in for a sourced PBR library (asset #5/#6).
-function useRoomMaterials() {
+function useRoomMaterials(theme: Theme) {
   const gl = useThree(state => state.gl);
   const env = useMemo(() => {
     const generator = new PMREMGenerator(gl);
@@ -81,15 +94,15 @@ function useRoomMaterials() {
   useEffect(() => () => env.dispose(), [env]);
 
   const textures = useDisposable<Texture>(() => {
-    const wall = limePlaster('#dcc2a4', '#c6a483', 11, [3, 2]);
-    const archTone = limePlaster('#e9b69c', '#d59c82', 23, [2, 2]);
-    const floor = travertine('#d9c19f', '#c3a37c', 5, [2, 5]);
-    const stone = travertine('#e6d6be', '#cdb593', 9, [1, 1]);
-    const rose = linen('#d9a493', 31, [3, 3]);
-    const peach = linen('#ecc5ae', 37, [3, 3]);
+    const wall = limePlaster(...theme.wall, 11, [3, 2]);
+    const archTone = limePlaster(...theme.arch, 23, [2, 2]);
+    const floor = travertine(...theme.floor, 5, [2, 5]);
+    const stone = travertine(...theme.stone, 9, [1, 1]);
+    const rose = linen(theme.upA, 31, [3, 3]);
+    const peach = linen(theme.upB, 37, [3, 3]);
     const sheer = linen('#fbf2e4', 41, [6, 6]);
-    return [wall.map, wall.bump, archTone.map, archTone.bump, floor.map, floor.rough, floor.bump, stone.map, stone.rough, rose.map, rose.bump, peach.map, peach.bump, sheer.map, oak('#c9a57c', 51, [1, 1]), coastView(61), ...coverTones.map((tone, i) => bookcloth(tone, 70 + i))];
-  });
+    return [wall.map, wall.bump, archTone.map, archTone.bump, floor.map, floor.rough, floor.bump, stone.map, stone.rough, rose.map, rose.bump, peach.map, peach.bump, sheer.map, oak(theme.wood, 51, [1, 1]), coastView(61), ...theme.tones.map((tone, i) => bookcloth(tone, 70 + i))];
+  }, [theme]);
   const [wallMap, wallBump, archMap, archBump, floorMap, floorRough, floorBump, stoneMap, stoneRough, roseMap, roseBump, peachMap, peachBump, sheerMap, oakMap, coastMap, ...coverMaps] = textures;
 
   const materials = useDisposable<Material>(() => {
@@ -118,27 +131,35 @@ type RoomMaterials = ReturnType<typeof useRoomMaterials>;
 
 type BookHandlers = { onHover: (slug: string | null) => void; onSelect: (slug: string) => void };
 
-// Spine, front board and back cloth for each official volume. Approved covers load from the offer catalogue;
-// until then the front board is an explicit "pending" plate.
-function useVolumeMaterials(env: Texture) {
-  const textures = useDisposable<Texture>(() => espelhoOffers.flatMap((offer, i) => {
-    const tone = coverTones[i];
-    let front: Texture;
-    if (offer.cover.status === 'approved') { front = new TextureLoader().load(offer.cover.src); front.colorSpace = SRGBColorSpace; }
-    else front = pendingCover(offer.title, offer.code);
-    return [spineLabel(offer.title, offer.productCode, tone), front, bookcloth(tone, 90 + i)];
-  }));
-  const materials = useDisposable<Material>(() => textures.map((map, i) => new MeshStandardMaterial({ map, roughness: i % 3 === 1 ? .7 : .86, envMap: env, envMapIntensity: .35 })), [env, ...textures]);
-  return espelhoOffers.map((_, i) => ({ spine: materials[i * 3], front: materials[i * 3 + 1], back: materials[i * 3 + 2] }));
+// Spine, front board and back cloth for each official volume. Fronts carry the official cover art (cropped from the
+// approved banners); a volume without a cover falls back to an explicit "pending" plate, never an invented cover.
+function loadCover(src: string, invalidate: () => void) {
+  const texture = new TextureLoader().load(src, () => invalidate());
+  texture.colorSpace = SRGBColorSpace; texture.anisotropy = 8;
+  return texture;
+}
+function useVolumeMaterials(items: ShelfItem[], tones: string[], env: Texture, workbook: boolean) {
+  const { invalidate } = useThree();
+  const textures = useDisposable<Texture>(() => [
+    ...items.flatMap((item, i) => {
+      const tone = tones[i % tones.length];
+      const front = item.cover ? loadCover(item.cover, invalidate) : pendingCover(item.title, item.code);
+      return [spineLabel(item.title, item.code, tone), front, bookcloth(tone, 90 + i)];
+    }),
+    ...(workbook ? [spineLabel('O Meu Corpo em Construção', 'Workbook', '#efe6d6'), loadCover(workbookCover, invalidate), bookcloth('#efe6d6', 99)] : []),
+  ], [items, tones, workbook, invalidate]);
+  const materials = useDisposable<Material>(() => textures.map((map, i) => new MeshStandardMaterial({ map, roughness: i % 3 === 1 ? .62 : .86, envMap: env, envMapIntensity: .35 })), [env, ...textures]);
+  const sets = Array.from({ length: materials.length / 3 }, (_, i) => ({ spine: materials[i * 3], front: materials[i * 3 + 1], back: materials[i * 3 + 2] }));
+  return { volumes: sets.slice(0, items.length), workbook: workbook ? sets[items.length] : null };
 }
 
-function Volume({ offer, index, hovered, selected, mobile, faces, handlers }: {
-  offer: Offer; index: number; hovered: boolean; selected: boolean; mobile: boolean; faces: Material[]; handlers: BookHandlers;
+function Volume({ item, x, hovered, selected, mobile, faces, handlers }: {
+  item: ShelfItem; x: number; hovered: boolean; selected: boolean; mobile: boolean; faces: Material[]; handlers: BookHandlers;
 }) {
   const group = useRef<Group>(null);
   const timeline = useRef<gsap.core.Timeline | null>(null);
   const { invalidate, gl } = useThree();
-  const slot = { x: NICHE_X + VOLUME_X[index], y: VOLUME_SHELF, z: NICHE_Z + .18 };
+  const slot = { x: NICHE_X + x, y: VOLUME_SHELF, z: NICHE_Z + .18 };
   // Spine-out on the shelf. Set once here: a JSX rotation prop would be re-applied on every render and fight GSAP.
   useLayoutEffect(() => { group.current?.rotation.set(0, Math.PI / 2, 0); }, []);
   useEffect(() => {
@@ -165,7 +186,7 @@ function Volume({ offer, index, hovered, selected, mobile, faces, handlers }: {
     }
     // Settled state for tests and for the cached reflection/shadows: "<slug>" once presented, "shelf" once home.
     tl.eventCallback('onComplete', () => {
-      if (selected) gl.domElement.dataset.bookState = offer.slug;
+      if (selected) gl.domElement.dataset.bookState = item.slug;
       else if (!atRest || !gl.domElement.dataset.bookState) gl.domElement.dataset.bookState = 'shelf';
       gl.domElement.dispatchEvent(new Event('lia:scene-changed'));
       invalidate();
@@ -176,11 +197,11 @@ function Volume({ offer, index, hovered, selected, mobile, faces, handlers }: {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected, hovered, mobile, invalidate]);
   return <group position={[slot.x, slot.y, slot.z]}>
-    <group ref={group} name={`espelho-book-${offer.slug}`}>
+    <group ref={group} name={`espelho-book-${item.slug}`}>
       <mesh castShadow receiveShadow position={[0, .19, 0]} material={faces}
-        onPointerOver={event => { event.stopPropagation(); if (!selected) { handlers.onHover(offer.slug); document.body.style.cursor = 'pointer'; } }}
+        onPointerOver={event => { event.stopPropagation(); if (!selected) { handlers.onHover(item.slug); document.body.style.cursor = 'pointer'; } }}
         onPointerOut={() => { handlers.onHover(null); document.body.style.cursor = ''; }}
-        onClick={event => { event.stopPropagation(); if (!selected) { document.body.style.cursor = ''; handlers.onSelect(offer.slug); } }}>
+        onClick={event => { event.stopPropagation(); if (!selected) { document.body.style.cursor = ''; handlers.onSelect(item.slug); } }}>
         <boxGeometry args={[.27, .38, .06]} />
       </mesh>
     </group>
@@ -208,29 +229,31 @@ const bowl: [number, number][] = [[0, 0], [.05, 0], [.1, .03], [.12, .07], [.115
 
 // One warm accent light, always mounted, that travels to the hovered or presented volume. Mounting and unmounting
 // lights changes the light count, which recompiles every material in the scene (seconds on modest GPUs).
-function AccentLight({ focusBook, selectedBook, mobile }: { focusBook: string | null; selectedBook: string | null; mobile: boolean }) {
+function AccentLight({ items, focusBook, selectedBook, mobile }: { items: ShelfItem[]; focusBook: string | null; selectedBook: string | null; mobile: boolean }) {
   const light = useRef<PointLight>(null);
   const { invalidate } = useThree();
   useEffect(() => {
     const target = light.current;
     if (!target) return;
-    const index = espelhoOffers.findIndex(offer => offer.slug === (selectedBook ?? focusBook));
+    const xs = volumeX(items.length), index = items.findIndex(item => item.slug === (selectedBook ?? focusBook));
     const pose = mobile ? PRESENT.mobile : PRESENT.desktop;
     const to = selectedBook ? { x: pose.x + .35, y: pose.y + .45, z: pose.z + .9, intensity: .45 }
-      : index >= 0 ? { x: NICHE_X + VOLUME_X[index] + .05, y: VOLUME_SHELF + .32, z: NICHE_Z + .65, intensity: .7 } : { intensity: 0 };
+      : index >= 0 ? { x: NICHE_X + xs[index] + .05, y: VOLUME_SHELF + .32, z: NICHE_Z + .65, intensity: .7 } : { intensity: 0 };
     const tween = gsap.to(target, { intensity: to.intensity, duration: .4, onUpdate: invalidate });
     if ('x' in to) gsap.set(target.position, { x: to.x, y: to.y, z: to.z });
     return () => { tween.kill(); };
-  }, [focusBook, selectedBook, mobile, invalidate]);
+  }, [items, focusBook, selectedBook, mobile, invalidate]);
   return <pointLight ref={light} color="#ffd9b8" intensity={0} distance={1.6} decay={2} position={[NICHE_X, VOLUME_SHELF + .32, NICHE_Z + .65]} />;
 }
 
-function NicheLibrary({ focusBook, selectedBook, mobile, handlers, m }: { focusBook: string | null; selectedBook: string | null; mobile: boolean; handlers: BookHandlers; m: RoomMaterials }) {
+function NicheLibrary({ items, workbook, tones, focusBook, selectedBook, mobile, handlers, m }: { items: ShelfItem[]; workbook: boolean; tones: string[]; focusBook: string | null; selectedBook: string | null; mobile: boolean; handlers: BookHandlers; m: RoomMaterials }) {
   const frame = useMemo(() => archFrame(.86, .7, 2.32, 0), []);
   const back = useMemo(() => archPath(new Shape(), .7, 0, 2.32), []);
-  const volumes = useVolumeMaterials(m.env);
+  const sets = useVolumeMaterials(items, tones, m.env, workbook);
+  const xs = volumeX(items.length);
   // Box faces: +x fore-edge, -x spine, +y head, -y tail, +z front board, -z back board.
-  const faces = useMemo(() => volumes.map(v => [m.pages, v.spine, m.pages, m.pages, v.front, v.back]), [volumes, m.pages]);
+  const faces = useMemo(() => sets.volumes.map(v => [m.pages, v.spine, m.pages, m.pages, v.front, v.back]), [sets, m.pages]);
+  const workbookFaces = useMemo(() => sets.workbook ? [m.pages, sets.workbook.spine, m.pages, m.pages, sets.workbook.front, sets.workbook.back] : null, [sets, m.pages]);
   return <group>
     <mesh castShadow receiveShadow position={[NICHE_X, 0, NICHE_Z]} material={m.wall}><extrudeGeometry args={[frame, { depth: .3, bevelEnabled: true, bevelSize: .025, bevelThickness: .025, bevelSegments: 4, curveSegments: 48 }]} /></mesh>
     <mesh receiveShadow position={[NICHE_X, 0, NICHE_Z + .01]} material={m.arch}><shapeGeometry args={[back, 48]} /></mesh>
@@ -239,17 +262,19 @@ function NicheLibrary({ focusBook, selectedBook, mobile, handlers, m }: { focusB
       <mesh castShadow receiveShadow position={[NICHE_X, y, NICHE_Z + .16]} material={m.wood}><boxGeometry args={[1.38, .035, .3]} /></mesh>
       {/* Concealed warm LED under each shelf. */}
       <mesh position={[NICHE_X, y - .021, NICHE_Z + .27]}><boxGeometry args={[1.2, .006, .012]} /><meshBasicMaterial color="#ffd8a6" toneMapped={false} /></mesh>
-      <pointLight position={[NICHE_X, y - .06, NICHE_Z + .32]} color="#ffcf9e" intensity={.55} distance={1.1} decay={2} />
     </group>)}
-    {espelhoOffers.map((offer, i) => <Volume key={offer.slug} offer={offer} index={i} faces={faces[i]} mobile={mobile} handlers={handlers}
-      hovered={focusBook === offer.slug && selectedBook !== offer.slug} selected={selectedBook === offer.slug} />)}
-    <AccentLight focusBook={focusBook} selectedBook={selectedBook} mobile={mobile} />
+    {items.map((item, i) => <Volume key={item.slug} item={item} x={xs[i]} faces={faces[i]} mobile={mobile} handlers={handlers}
+      hovered={focusBook === item.slug && selectedBook !== item.slug} selected={selectedBook === item.slug} />)}
+    <AccentLight items={items} focusBook={focusBook} selectedBook={selectedBook} mobile={mobile} />
+    {/* The workbook included with Corpo Forte, displayed face-out on the upper shelf. */}
+    {workbookFaces ? <mesh castShadow receiveShadow position={[NICHE_X - .02, 1.87 + .19, NICHE_Z + .2]} rotation={[-.08, .05, 0]} material={workbookFaces}><boxGeometry args={[.25, .38, .03]} /></mesh> : null}
     <Spines x={-.62} y={VOLUME_SHELF + .02} count={10} m={m} seed={4} />
     <Spines x={.19} y={VOLUME_SHELF + .02} count={9} m={m} seed={6} />
     <Spines x={-.66} y={1.87} count={5} m={m} seed={1} />
     <Spines x={.44} y={1.87} count={5} m={m} seed={3} />
     <Spines x={-.5} y={2.52} count={9} m={m} seed={2} />
-    <Ceramic position={[NICHE_X - .02, 1.87, NICHE_Z + .18]} profile={tallVase} m={m} />
+    {workbook ? null : <Ceramic position={[NICHE_X - .02, 1.87, NICHE_Z + .18]} profile={tallVase} m={m} />}
+    {items.length ? null : <Ceramic position={[NICHE_X - .04, VOLUME_SHELF + .02, NICHE_Z + .2]} profile={bowl} m={m} />}
     <Ceramic position={[NICHE_X + .36, 2.52, NICHE_Z + .18]} profile={tallVase} m={m} />
     <Ceramic position={[NICHE_X + .45, .6, NICHE_Z + .25]} profile={bowl} m={m} />
   </group>;
@@ -296,10 +321,10 @@ function Mirror({ active, mobile, m }: { active: boolean; mobile: boolean; m: Ro
       <mesh castShadow material={m.copper}><tubeGeometry args={[rim, 200, .03, 14, true]} /></mesh>
     </group>
     {[-.24, .24].map(x => <mesh key={x} castShadow position={[x, .17, .04]} rotation={[.1, 0, 0]} material={m.copper}><cylinderGeometry args={[.012, .016, .34, 12]} /></mesh>)}
-    <pointLight position={[.15, 1.3, .55]} color="#ffd3ae" intensity={.8} distance={2} decay={2} />
-    {active ? <Html position={[0, 1.45, .06]} center zIndexRange={[4, 0]} className="lia-mirror-phrase" pointerEvents="none">
+    {/* Always mounted and only faded: unmounting drei's Html during a route change raced React's own DOM removal. */}
+    <Html position={[0, 1.45, .06]} center zIndexRange={[4, 0]} className={`lia-mirror-phrase ${active ? '' : 'is-hidden'}`} pointerEvents="none">
       <p>{mirrorReflection}</p>
-    </Html> : null}
+    </Html>
   </group>;
 }
 
@@ -346,26 +371,26 @@ function Banquette({ m }: { m: RoomMaterials }) {
   </group>;
 }
 
-function TubChair({ m }: { m: RoomMaterials }) {
+function TubChair({ m, position = [1.08, 0, -7.7], turn = -.62 }: { m: RoomMaterials; position?: [number, number, number]; turn?: number }) {
   // Curved shell turned on a lathe, open at the front: the sculpted armchair of the master's EspelhoMeu arch.
   const shell = useMemo(() => lathe([[.3, .3], [.4, .32], [.45, .45], [.46, .66], [.44, .76], [.4, .78], [.38, .74], [.39, .5], [.34, .42]]), []);
-  return <group position={[1.08, 0, -7.7]} rotation={[0, -.62, 0]}>
+  return <group position={position} rotation={[0, turn, 0]}>
     <mesh castShadow receiveShadow material={m.peach}><latheGeometry args={[shell, 64, Math.PI * .3, Math.PI * 1.4]} /></mesh>
     <mesh castShadow receiveShadow position={[0, .38, .02]} material={m.peach}><cylinderGeometry args={[.37, .38, .14, 48]} /></mesh>
     <mesh castShadow receiveShadow position={[0, .17, 0]} material={m.wood}><cylinderGeometry args={[.3, .32, .32, 48]} /></mesh>
   </group>;
 }
 
-function StoneTable({ m }: { m: RoomMaterials }) {
+function StoneTable({ m, bare = false }: { m: RoomMaterials; bare?: boolean }) {
   const top = useMemo(() => pebble(.5, .34), []);
   const pedestal = useMemo(() => lathe([[0, 0], [.26, 0], [.27, .02], [.16, .1], [.12, .26], [.15, .37], [0, .37]]), []);
   const vase = useMemo(() => lathe([[0, 0], [.055, 0], [.085, .06], [.08, .14], [.045, .2], [.04, .24], [.05, .26], [0, .26]]), []);
   return <group position={[.58, 0, -6.95]} rotation={[0, .25, 0]}>
     <mesh castShadow receiveShadow material={m.stone}><latheGeometry args={[pedestal, 48]} /></mesh>
     <mesh castShadow receiveShadow position={[0, .37, 0]} rotation={[-Math.PI / 2, 0, 0]} material={m.stone}><extrudeGeometry args={[top, { depth: .04, bevelEnabled: true, bevelSize: .018, bevelThickness: .018, bevelSegments: 4, curveSegments: 64 }]} /></mesh>
-    <mesh castShadow receiveShadow position={[.14, .43, .02]} material={m.ceramic}><latheGeometry args={[vase, 40]} /></mesh>
-    <Sprigs m={m} position={[.14, .66, .02]} />
-    <RoundedBox args={[.2, .028, .27]} radius={.008} position={[-.2, .44, .06]} rotation={[0, .5, 0]} castShadow material={m.covers[2]} />
+    {bare ? null : <mesh castShadow receiveShadow position={[.14, .43, .02]} material={m.ceramic}><latheGeometry args={[vase, 40]} /></mesh>}
+    {bare ? null : <Sprigs m={m} position={[.14, .66, .02]} />}
+    {bare ? null : <RoundedBox args={[.2, .028, .27]} radius={.008} position={[-.2, .44, .06]} rotation={[0, .5, 0]} castShadow material={m.covers[2]} />}
   </group>;
 }
 
@@ -422,25 +447,46 @@ function OliveTree({ m, position }: { m: RoomMaterials; position: [number, numbe
   </group>;
 }
 
-function SunLight() {
-  // Late-afternoon sun through the left window: the only shadow-casting light inside the room.
+// Atelier pieces for the Corpo room: a mat, a stability ball and a pair of bronze dumbbells, all at human scale.
+function AtelierSet({ m }: { m: RoomMaterials }) {
+  return <group>
+    <RoundedBox args={[1.85, .025, .68]} radius={.01} smoothness={3} position={[.15, .016, -7.35]} rotation={[0, .06, 0]} castShadow receiveShadow material={m.rose} />
+    <mesh castShadow receiveShadow position={[1.32, .33, -8.2]} material={m.peach}><sphereGeometry args={[.32, 48, 32]} /></mesh>
+    {[-.12, .12].map(z => <group key={z} position={[.95, .055, -6.7 + z]} rotation={[0, .5, 0]}>
+      <mesh castShadow material={m.copper} rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[.015, .015, .26, 12]} /></mesh>
+      {[-.11, .11].map(x => <mesh key={x} castShadow material={m.copper} position={[x, 0, 0]} rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[.05, .05, .06, 24]} /></mesh>)}
+    </group>)}
+    <RoundedBox args={[.32, .05, .22]} radius={.02} position={[-.62, .03, -6.55]} rotation={[0, -.3, 0]} castShadow material={m.peach} />
+  </group>;
+}
+
+// Shared interior key and fill. Rendered once by PortalScene and moved into the active room, so the scene keeps a
+// constant light count (no shader recompiles between rooms) and only one interior shadow map is rendered.
+export function InteriorLights({ room }: { room: RoomId }) {
   const target = useMemo(() => new Object3D(), []);
+  const sun = THEMES[room].sun;
   return <>
     <primitive object={target} position={[.5, 0, -7.9]} />
-    <spotLight position={[-4.8, 4.6, -6.2]} target={target} color="#ffb878" intensity={640} angle={.4} penumbra={.42} distance={14} decay={2}
+    {/* Late-afternoon sun falling from the left window onto the rug. */}
+    <spotLight position={[-1.95, 3.25, -6.9]} target={target} color="#ffb878" intensity={230 * sun} angle={.8} penumbra={.5} distance={9} decay={2}
       castShadow shadow-mapSize={[1024, 1024]} shadow-bias={-.0004} shadow-normalBias={.02} />
+    {/* Soft bounce from the plaster ceiling; the env map supplies the rest of the fill. */}
+    <pointLight position={[.2, 3.7, -7.4]} color="#ffdcb8" intensity={1} distance={7} decay={2} />
   </>;
 }
 
-export function EspelhoMeuRoom({ focusBook, selectedBook = null, active, mobile = false, handlers }: { focusBook: string | null; selectedBook?: string | null; active: boolean; mobile?: boolean; handlers: BookHandlers }) {
-  const m = useRoomMaterials();
+export function ThemedRoom({ room, items, workbook, focusBook, selectedBook = null, active, mobile = false, handlers }: {
+  room: RoomId; items: ShelfItem[]; workbook: boolean; focusBook: string | null; selectedBook?: string | null; active: boolean; mobile?: boolean; handlers: BookHandlers;
+}) {
+  const theme = THEMES[room];
+  const m = useRoomMaterials(theme);
   // Foreground plane: the jambs of this arch occlude the room edges at arrival.
   const arch = useMemo(() => archedOpening(HALF, 0, HEIGHT, 1.25, 2.2), []);
   const rug = useMemo(() => { const shape = new Shape(); shape.absellipse(0, 0, 1.5, 1.05, 0, Math.PI * 2, false, 0); return shape; }, []);
   const sunSpan = [[0, SUN_WINDOW.z + SUN_WINDOW.half], [SUN_WINDOW.z - SUN_WINDOW.half, -10]] as const;
   const wallBox = (key: string, position: [number, number, number], size: [number, number, number]) =>
     <mesh key={key} castShadow receiveShadow position={position} material={m.wall}><boxGeometry args={size} /></mesh>;
-  return <group name="room-interior-espelho-meu">
+  return <group name={`room-interior-${room}`}>
     {/* Shell. Every wall casts shadow so the lobby sun no longer floods the room; light enters only through the windows. */}
     {[[-HALF, WINDOW.x - WINDOW.half], [WINDOW.x + WINDOW.half, HALF]].map(([from, to]) => wallBox(`back${from}`, [(from + to) / 2, HEIGHT / 2, -10], [to - from + .02, HEIGHT, .2]))}
     {wallBox('back-sill', [WINDOW.x, WINDOW.sill / 2, -10], [WINDOW.half * 2, WINDOW.sill, .2])}
@@ -456,18 +502,28 @@ export function EspelhoMeuRoom({ focusBook, selectedBook = null, active, mobile 
     {[[-HALF + .1, -5, 10, Math.PI / 2], [HALF - .1, -5, 10, Math.PI / 2], [0, -9.86, WIDTH, 0]].map(([x, z, length, turn]) => <mesh key={`c${x}:${z}`} position={[x, HEIGHT - .06, z]} rotation={[0, turn, 0]} material={m.ceramic}><boxGeometry args={[length, .1, .08]} /></mesh>)}
 
     <mesh castShadow receiveShadow position={[0, 0, -5.25]} material={m.arch}><extrudeGeometry args={[arch, { depth: .45, bevelEnabled: true, bevelSize: .03, bevelThickness: .03, bevelSegments: 4, curveSegments: 64 }]} /></mesh>
-    <mesh receiveShadow position={[.1, .022, -7.5]} rotation={[-Math.PI / 2, 0, .08]} material={m.peach}><extrudeGeometry args={[rug, { depth: .012, bevelEnabled: true, bevelSize: .01, bevelThickness: .004, bevelSegments: 2, curveSegments: 64 }]} /></mesh>
+    {theme.furniture === 'atelier' ? null : <mesh receiveShadow position={[.1, .022, -7.5]} rotation={[-Math.PI / 2, 0, .08]} material={theme.rug === 'a' ? m.rose : m.peach}><extrudeGeometry args={[rug, { depth: .012, bevelEnabled: true, bevelSize: .01, bevelThickness: .004, bevelSegments: 2, curveSegments: 64 }]} /></mesh>}
 
     <SunWindow m={m} />
-    <SunLight />
-    {/* Soft bounce from the plaster ceiling; the env map supplies the rest of the fill. */}
-    <pointLight position={[.2, 3.7, -7.4]} color="#ffdcb8" intensity={1} distance={7} decay={2} />
-    <NicheLibrary focusBook={focusBook} selectedBook={selectedBook} mobile={mobile} handlers={handlers} m={m} />
-    <Mirror active={active && !selectedBook} mobile={mobile} m={m} />
+    <NicheLibrary items={items} workbook={workbook} tones={theme.tones} focusBook={focusBook} selectedBook={selectedBook} mobile={mobile} handlers={handlers} m={m} />
     <CoastWindow m={m} />
     <Banquette m={m} />
-    <TubChair m={m} />
-    <StoneTable m={m} />
     <OliveTree m={m} position={[-1.72, 0, -7.85]} />
+    {theme.furniture === 'salon' ? <>
+      <Mirror active={active && !selectedBook} mobile={mobile} m={m} />
+      <TubChair m={m} />
+      <StoneTable m={m} />
+    </> : null}
+    {theme.furniture === 'garden' ? <>
+      <TubChair m={m} position={[-1.05, 0, -8.1]} turn={.55} />
+      <StoneTable m={m} />
+      <OliveTree m={m} position={[1.75, 0, -6.6]} />
+    </> : null}
+    {theme.furniture === 'atelier' ? <AtelierSet m={m} /> : null}
+    {theme.furniture === 'pause' ? <>
+      <TubChair m={m} position={[-1.3, 0, -8.55]} turn={.8} />
+      <StoneTable m={m} bare />
+      <OliveTree m={m} position={[1.75, 0, -6.6]} />
+    </> : null}
   </group>;
 }
