@@ -10,8 +10,24 @@ function random(seed: number) {
   return () => { state = (state * 1664525 + 1013904223) >>> 0; return state / 4294967296; };
 }
 
+// Noise fields and the colourless relief maps depend only on size and seed, and the four themed rooms reuse the same
+// seeds with different palettes. Memoising them keeps phones from recomputing identical fields per room. Cached
+// textures are shared and live for the page's lifetime, so rooms never dispose them.
+const noiseCache = new Map<string, Float32Array>();
+const reliefCache = new Map<string, Texture>();
+/** Shared relief maps belong to the cache, not to a room: callers must not dispose them. */
+export const isSharedTexture = (resource: unknown) => [...reliefCache.values()].includes(resource as Texture);
+function memo<T>(cache: Map<string, T>, key: string, make: () => T) {
+  let value = cache.get(key);
+  if (!value) { value = make(); cache.set(key, value); }
+  return value;
+}
+
 // Tileable value noise sampled into a Float32Array (0..1).
 function valueNoise(size: number, cells: number, seed: number) {
+  return memo(noiseCache, `v${size}:${cells}:${seed}`, () => computeNoise(size, cells, seed));
+}
+function computeNoise(size: number, cells: number, seed: number) {
   const rand = random(seed);
   const lattice = Array.from({ length: cells * cells }, rand);
   const out = new Float32Array(size * size);
@@ -28,6 +44,9 @@ function valueNoise(size: number, cells: number, seed: number) {
 }
 
 function fbm(size: number, seed: number, octaves: [cells: number, weight: number][]) {
+  return memo(noiseCache, `f${size}:${seed}:${octaves.join(';')}`, () => computeFbm(size, seed, octaves));
+}
+function computeFbm(size: number, seed: number, octaves: [cells: number, weight: number][]) {
   const total = octaves.reduce((sum, [, weight]) => sum + weight, 0);
   const out = new Float32Array(size * size);
   octaves.forEach(([cells, weight], i) => { const layer = valueNoise(size, cells, seed + i * 101); for (let p = 0; p < out.length; p++) out[p] += layer[p] * weight / total; });
@@ -46,10 +65,10 @@ function paint(size: number, painter: Painter, srgb: boolean, repeat: [number, n
   canvas.width = canvas.height = size;
   const context = canvas.getContext('2d');
   if (!context) throw new Error('2D canvas unavailable');
-  const image = context.createImageData(size, size);
+  const image = context.createImageData(size, size), data = image.data;
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
-    const i = y * size + x, [r, g, b] = painter(x, y, i);
-    image.data.set([r, g, b, 255], i * 4);
+    const i = y * size + x, [r, g, b] = painter(x, y, i), o = i * 4;
+    data[o] = r; data[o + 1] = g; data[o + 2] = b; data[o + 3] = 255;
   }
   context.putImageData(image, 0, 0);
   const texture = new CanvasTexture(canvas);
@@ -70,7 +89,7 @@ export function limePlaster(base: string, shade: string, seed: number, repeat: [
   const a = hex(base), b = hex(shade);
   return {
     map: paint(size, (_x, _y, i) => mix(a, b, Math.min(1, Math.max(0, cloud[i] * 1.3 - .25 + grain[i] * .08))), true, repeat),
-    bump: paint(size, (_x, _y, i) => { const v = 120 + cloud[i] * 50 + grain[i] * 70; return [v, v, v]; }, false, repeat),
+    bump: memo(reliefCache, `plaster${seed}:${repeat}`, () => paint(size, (_x, _y, i) => { const v = 120 + cloud[i] * 50 + grain[i] * 70; return [v, v, v]; }, false, repeat)),
   };
 }
 
@@ -86,8 +105,8 @@ export function travertine(base: string, vein: string, seed: number, repeat: [nu
       const tone = mix(a, b, band * .45 + bedding[i] * .25);
       return pores[i] > .9 ? mix(tone, [170, 146, 118], .5) : tone;
     }, true, repeat),
-    rough: paint(size, (x, y, i) => { const v = joint(x, y) ? 250 : 120 + bedding[i] * 60 + (pores[i] > .9 ? 80 : 0); return [v, v, v]; }, false, repeat),
-    bump: paint(size, (x, y, i) => { const v = joint(x, y) ? 40 : pores[i] > .9 ? 90 : 150 + bedding[i] * 30; return [v, v, v]; }, false, repeat),
+    rough: memo(reliefCache, `travertineRough${seed}:${repeat}`, () => paint(size, (x, y, i) => { const v = joint(x, y) ? 250 : 120 + bedding[i] * 60 + (pores[i] > .9 ? 80 : 0); return [v, v, v]; }, false, repeat)),
+    bump: memo(reliefCache, `travertineBump${seed}:${repeat}`, () => paint(size, (x, y, i) => { const v = joint(x, y) ? 40 : pores[i] > .9 ? 90 : 150 + bedding[i] * 30; return [v, v, v]; }, false, repeat)),
   };
 }
 
@@ -96,7 +115,7 @@ export function linen(base: string, seed: number, repeat: [number, number]) {
   const size = 256, slub = valueNoise(size, 64, seed), a = hex(base);
   return {
     map: paint(size, (x, y, i) => { const weave = ((x >> 1) + (y >> 1)) % 2 ? 1 : .94; const v = weave * (0.94 + slub[i] * .1); return [a[0] * v, a[1] * v, a[2] * v]; }, true, repeat),
-    bump: paint(size, (x, y, i) => { const v = (x % 4 < 2) !== (y % 4 < 2) ? 170 : 100; return [v + slub[i] * 40, v + slub[i] * 40, v + slub[i] * 40]; }, false, repeat),
+    bump: memo(reliefCache, `linen${seed}:${repeat}`, () => paint(size, (x, y, i) => { const v = (x % 4 < 2) !== (y % 4 < 2) ? 170 : 100; return [v + slub[i] * 40, v + slub[i] * 40, v + slub[i] * 40]; }, false, repeat)),
   };
 }
 

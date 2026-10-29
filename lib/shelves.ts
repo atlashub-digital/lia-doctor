@@ -3,7 +3,8 @@ import { findProduct, type Product } from '@/lib/products';
 import type { RoomId } from '@/lib/immersive';
 
 // What each themed room puts on its shelf. Items come from the single product catalogue, so the 3D volumes, the HTML
-// library, the editorial sheet and the sales pages always agree. Covers are cropped from the official banners.
+// library, the editorial sheet and the sales pages always agree. Covers are the final art from each book's folder in
+// the EspelhoMeu Editions library (P01/P02/P05 cover files, P03/P04/MSL001/MSL002 first page of the book PDF).
 
 export type ShelfItem = {
   slug: string;
@@ -16,6 +17,8 @@ export type ShelfItem = {
   notice: string;
   checkout: string;
   cover: string;
+  /** Cover height / width, so the 3D board keeps the official proportions (EspelhoMeu 2:3, Me Sentir Leve A5). */
+  ratio: number;
   banner: string;
   salesPath: string;
   collection: string;
@@ -31,7 +34,7 @@ const covers: Record<string, string> = {
   'corpo-forte-alem-da-balanca': '/editorial/covers/me-sentir-leve-msl002.webp',
 };
 /** The workbook ships inside Corpo Forte; it stands next to it as a display volume, not a separate product. */
-export const workbookCover = '/editorial/covers/me-sentir-leve-msl003.webp';
+export const workbookCover = { src: '/editorial/covers/me-sentir-leve-msl003.webp', ratio: 952 / 640 };
 
 function item(product: Product): ShelfItem {
   const offer = espelhoOffers.find(entry => entry.slug === product.slug);
@@ -39,7 +42,7 @@ function item(product: Product): ShelfItem {
     slug: product.slug, code: product.code, title: product.title,
     kicker: offer?.eyebrow ?? product.hook, short: offer?.description ?? product.hook,
     synopsis: product.synopsis, includes: product.includes.map(entry => entry.title), notice: product.notice,
-    checkout: product.checkout, cover: covers[product.slug], banner: product.banner, salesPath: `/livros/${product.slug}`,
+    checkout: product.checkout, cover: covers[product.slug], ratio: product.series === 'EspelhoMeu' ? 1.5 : 908 / 640, banner: product.banner, salesPath: `/livros/${product.slug}`,
     collection: product.series === 'EspelhoMeu' ? 'EspelhoMeu Editions' : 'Me Sentir Leve',
   };
 }

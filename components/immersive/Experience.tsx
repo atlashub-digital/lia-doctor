@@ -9,7 +9,7 @@ import { books, canonicalImage, cropStyle, findRoom, hotspotStyle, mirrorReflect
 import { findShelfItem, shelves, type ShelfItem } from '@/lib/shelves';
 import { HotmartCheckout } from '@/components/HotmartCheckout';
 import Image from 'next/image';
-import { ChatPanel } from './ChatPanel';
+import { ChatPanel, ChatSoon } from './ChatPanel';
 import { FocusDialog } from './FocusDialog';
 import { SocialLinks } from '@/components/SocialLinks';
 import './experience.css';
@@ -27,7 +27,7 @@ class SceneBoundary extends Component<{ children: ReactNode; onFailure: () => vo
   render() { return this.state.failed ? null : this.props.children; }
 }
 
-export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceEnabled: boolean }) {
+export function Experience({ enabled, voiceEnabled, chatEnabled }: { enabled: boolean; voiceEnabled: boolean; chatEnabled: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const selected = findRoom(pathname.split('/')[2]);
@@ -137,7 +137,7 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
         </nav>
         <div className="lia-desktop-actions" inert={travelling ? true : undefined}>
           {rooms.map(room => <Link key={room.id} href={`/experiencia/${room.id}`} className="lia-hotspot lia-door-hit" style={hotspotStyle(room.boundsPx)} aria-label={`Entrar em ${room.label}`} onClick={event => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && event.button === 0) { event.preventDefault(); enter(room.id); } }}><span className="lia-door-tip">Entrar em {room.label} <span aria-hidden="true">→</span></span></Link>)}
-          <button className="lia-hotspot lia-person-hit" style={hotspotStyle(sceneManifest.hotspots[0].boundsPx)} aria-label="Conversar com a LIA, assistente IA" aria-haspopup="dialog" onClick={() => setChat(true)}><span className="lia-person-tip">Olá, sou a LIA. Vamos conversar? <span aria-hidden="true">↗</span></span></button>
+          <button className="lia-hotspot lia-person-hit" style={hotspotStyle(sceneManifest.hotspots[0].boundsPx)} aria-label="Conversar com a LIA, assistente IA" aria-haspopup="dialog" onClick={() => setChat(true)}><span className="lia-person-tip">{chatEnabled ? 'Olá, sou a LIA. Vamos conversar?' : 'Olá, sou a LIA. A nossa conversa chega muito em breve.'} <span aria-hidden="true">↗</span></span></button>
           <button className="lia-hotspot lia-chat-hit" style={hotspotStyle(sceneManifest.hotspots[1].boundsPx)} aria-label="Abrir conversa com a LIA" aria-haspopup="dialog" onClick={() => setChat(true)} />
           {books.map((book, i) => <Link key={book.id} href={book.href} className="lia-hotspot lia-book-hit" style={hotspotStyle(sceneManifest.hotspots[i + 2].boundsPx)} aria-label={`Conhecer ${book.title}`} />)}
           {[sceneManifest.hotspots[5], sceneManifest.hotspots[6]].map(hotspot => <a key={hotspot.id} className="lia-hotspot lia-community-hit" style={hotspotStyle(hotspot.boundsPx)} href={sceneManifest.community.url} target="_blank" rel="noopener noreferrer" aria-label="Entrar na Comunidade LIA — WhatsApp" />)}
@@ -152,7 +152,7 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
           <p className="lia-room-subtitle">{selected.subtitle}</p>
           <p>{selected.description}</p>
           <a href={selected.destination} className="lia-pill" {...(selected.destination.startsWith('https:') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{selected.cta} <span aria-hidden="true">→</span></a>
-          <button className="lia-text-button" onClick={() => setChat(true)}>Conversar com a LIA <span aria-hidden="true">↗</span></button>
+          <button className="lia-text-button" onClick={() => setChat(true)}>Conversar com a LIA{chatEnabled ? null : <span className="lia-soon">muito em breve</span>} <span aria-hidden="true">↗</span></button>
         </article>
         {shelf?.items.length ? <LivingLibrary room={selected.id} heading={shelf.heading} items={shelf.items} active={focusBook} selectedSlug={roomBook?.slug ?? null} onFocus={setFocusBook} onOpen={openBook} reflection={selected.id === 'espelho-meu' ? (canRender && !mobile ? 'hidden' : 'shown') : 'none'} /> : null}
         {roomBook ? <BookSheet key={roomBook.slug} item={roomBook} headingRef={sheetHeading} onClose={closeBook} showCover={!canRender} /> : null}
@@ -163,7 +163,7 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
 
     {!selected ? <div className="lia-mobile-content">
       <header className="lia-mobile-header"><Link href="/" className="lia-wordmark">LIA.doctor</Link><button onClick={() => setPanel('search')} aria-label="Pesquisar">⌕</button><a href={sceneManifest.community.url} target="_blank" rel="noopener noreferrer" aria-label="Comunidade LIA no WhatsApp">Comunidade ↗</a></header>
-      <section className="lia-mobile-welcome"><div className="lia-mobile-portrait" role="img" aria-label="LIA, assistente de inteligência artificial"><picture><source media="(max-width: 767px)" srcSet={mobilePhoto.srcSet} sizes="100vw" /><img src={transparentPixel} alt="" fetchPriority="high" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} /></picture></div><div><span className="lia-eyebrow">UM ESPAÇO SEU</span><h2>A companheira<br /><em>da sua jornada.</em></h2><p>Mais conhecimento.<br />Mais equilíbrio. Mais tu.</p><button className="lia-pill" onClick={() => setChat(true)}>Olá, sou a LIA. Conversamos? ↗</button><small>Assistente de inteligência artificial</small></div></section>
+      <section className="lia-mobile-welcome"><div className="lia-mobile-portrait" role="img" aria-label="LIA, assistente de inteligência artificial"><picture><source media="(max-width: 767px)" srcSet={mobilePhoto.srcSet} sizes="100vw" /><img src={transparentPixel} alt="" fetchPriority="high" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} /></picture></div><div><span className="lia-eyebrow">UM ESPAÇO SEU</span><h2>A companheira<br /><em>da sua jornada.</em></h2><p>Mais conhecimento.<br />Mais equilíbrio. Mais tu.</p><button className="lia-pill" onClick={() => setChat(true)}>{chatEnabled ? 'Olá, sou a LIA. Conversamos? ↗' : 'Olá, sou a LIA. Chat muito em breve ↗'}</button><small>Assistente de inteligência artificial</small></div></section>
       <section className="lia-mobile-areas" aria-labelledby="areas-heading"><span className="lia-eyebrow">QUATRO CAMINHOS PARA SI</span><h2 id="areas-heading">Por onde vamos começar?</h2><div className="lia-mobile-doors">{rooms.map((room, i) => <Link key={room.id} href={`/experiencia/${room.id}`} className="lia-mobile-door" style={{ '--door-tone': room.material } as CSSProperties} onClick={event => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey) { event.preventDefault(); enter(room.id); } }}><div className="lia-door-view" style={cropStyle([room.boundsPx[0] + (i === 0 ? 63 : 15), 320, room.boundsPx[2] - 8, 525])} /><span className="lia-door-number">0{i + 1}</span><strong>{room.label}</strong><span>{room.subtitle}</span><span className="lia-door-arrow" aria-hidden="true">→</span></Link>)}</div></section>
       <section className="lia-mobile-books" id="leituras"><span className="lia-eyebrow">LEITURAS QUE ACOMPANHAM</span><h2>Um livro para cada momento.</h2><div className="lia-reading-list">{books.map(book => <Link href={book.href} key={book.id}><span className="lia-cover" style={cropStyle(book.cover)} /><span><strong>{book.title}</strong><small>{book.note}</small><span className="lia-reading-cta">Conhecer →</span></span></Link>)}</div></section>
       <a className="lia-community-card" href={sceneManifest.community.url} target="_blank" rel="noopener noreferrer"><span className="lia-eyebrow">UM ESPAÇO PARA PARTILHAR</span><h2>Comunidade LIA <span aria-hidden="true">↗</span></h2><p>Aprender, partilhar e evoluir juntas.</p><span>Entrar na comunidade →</span></a>
@@ -171,7 +171,7 @@ export function Experience({ enabled, voiceEnabled }: { enabled: boolean; voiceE
 
     <footer className="lia-footer"><Link href="/colecoes">LIA.doctor <span>Leituras & coleções</span></Link><SocialLinks compact /><Link href="/privacidade">Privacidade</Link><button className="lia-text-button" onClick={() => setPanel('about')}>Sobre a LIA</button></footer>
 
-    {chat ? <ChatPanel voiceEnabled={voiceEnabled} onClose={() => setChat(false)} /> : null}
+    {chat ? chatEnabled ? <ChatPanel voiceEnabled={voiceEnabled} onClose={() => setChat(false)} /> : <ChatSoon onClose={() => setChat(false)} /> : null}
     {panel ? <FocusDialog title={panel === 'about' ? 'Sobre a LIA' : panel === 'areas' ? 'Quatro caminhos para si' : panel === 'books' ? 'Leituras que acompanham' : 'O que procura?'} onClose={() => { setPanel(null); setQuery(''); }}>
       {panel === 'about' ? <><p>Um espaço editorial para conhecer, refletir e encontrar leituras que façam sentido para si.</p><p>A LIA é uma assistente de inteligência artificial. Não substitui acompanhamento profissional. Evite partilhar dados pessoais ou clínicos no chat público.</p><Link className="lia-pill" href="/privacidade">Ler a política de privacidade →</Link></> : null}
       {panel === 'search' ? <label className="lia-search">Pesquisar<input autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder="Um livro, uma área…" /></label> : null}
@@ -196,7 +196,7 @@ function LivingLibrary({ room, heading, items, active, selectedSlug, onFocus, on
         aria-current={selectedSlug === item.slug ? 'true' : undefined} aria-describedby={active === item.slug ? 'lia-library-label' : undefined}
         className={active === item.slug || selectedSlug === item.slug ? 'is-focused' : undefined} onMouseEnter={() => onFocus(item.slug)} onFocus={() => onFocus(item.slug)}
         onClick={event => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && event.button === 0) { event.preventDefault(); onOpen(item.slug); } }}>
-        <Image className="lia-library-cover" src={item.cover} alt="" width={36} height={52} /><span className="lia-library-code">{item.code}</span>{item.title}</Link></li>)}
+        <Image className="lia-library-cover" src={item.cover} alt="" width={36} height={Math.round(36 * item.ratio)} /><span className="lia-library-code">{item.code}</span>{item.title}</Link></li>)}
     </ol>
     <div id="lia-library-label" className="lia-library-label" aria-live="polite">
       {book ? <><span className="lia-eyebrow">{book.kicker}</span><p>{book.short}</p></> : <small>Escolha um livro para o ver de perto.</small>}
@@ -219,7 +219,7 @@ function BookSheet({ item, headingRef, onClose, showCover }: { item: ShelfItem; 
   return <section className="lia-book-sheet" role="dialog" aria-modal="false" aria-labelledby="lia-book-title">
     <button className="lia-book-close" onClick={onClose} aria-label="Fechar a ficha e devolver o livro à estante"><span aria-hidden="true">×</span></button>
     {/* Without the 3D book (no WebGL, reduced motion, mobile layout), the official cover sits at the top of the sheet. */}
-    {showCover ? <Image className="lia-book-cover" src={item.cover} alt={`Capa de ${item.title}`} width={500} height={760} sizes="(max-width: 767px) 40vw, 160px" /> : null}
+    {showCover ? <Image className="lia-book-cover" src={item.cover} alt={`Capa de ${item.title}`} width={640} height={Math.round(640 * item.ratio)} sizes="(max-width: 767px) 40vw, 160px" /> : null}
     <span className="lia-eyebrow">{item.collection} · {item.code}</span>
     <h2 id="lia-book-title" ref={headingRef} tabIndex={-1}>{item.title}</h2>
     <p className="lia-book-kicker">{item.kicker}</p>

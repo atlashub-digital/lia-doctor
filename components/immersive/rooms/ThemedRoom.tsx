@@ -14,7 +14,7 @@ import { mirrorReflection } from '@/lib/immersive';
 import type { RoomId } from '@/lib/immersive';
 import { workbookCover, type ShelfItem } from '@/lib/shelves';
 import { archFrame, archPath } from '../scene-kit';
-import { bookcloth, coastView, limePlaster, linen, oak, pendingCover, spineLabel, travertine } from './espelho-materials';
+import { bookcloth, coastView, isSharedTexture, limePlaster, linen, oak, pendingCover, spineLabel, travertine } from './espelho-materials';
 
 // Themed rooms of the LIA house. The EspelhoMeu Golden Room (V1.1 look-dev, docs 05–06) is the reference kit; each
 // theme swaps palette, furniture and shelf: EspelhoMeu "Galeria do Reflexo", Me Sentir Leve "Jardim da Leveza",
@@ -33,11 +33,11 @@ export const THEMES: Record<RoomId, Theme> = {
   'mente-e-calma': { wall: ['#e9e2d2', '#d6cdb8'], arch: ['#a3b3a0', '#8fa08c'], floor: ['#ddd0b8', '#c9b998'], stone: ['#eae2d1', '#d3c7ae'], upA: '#c9d2c2', upB: '#f2ebde', wood: '#c2a27a', tones: ['#a3b3a0', '#dccfb7', '#efe6d6', '#8fa08c', '#c9b998'], rug: 'b', furniture: 'pause', sun: .75 },
 };
 // The room's official volumes stand spine-out together on the middle shelf, in catalogue order.
-const VOLUME_SHELF = 1.22;
+const VOLUME_SHELF = 1.22, VOLUME_WIDTH = .26;
 const volumeX = (count: number) => Array.from({ length: count }, (_, i) => -.04 + (i - (count - 1) / 2) * .065);
 // Where a selected volume is presented, in room space (arrival camera at z = -2.8). Desktop leaves the right third
 // to the editorial sheet; mobile lifts the book above the bottom sheet.
-const PRESENT = { desktop: { x: -.2, y: 1.6, z: -4.35, scale: 1.55 }, mobile: { x: 0, y: 2.06, z: -4.3, scale: .66 } };
+const PRESENT = { desktop: { x: -.2, y: 1.6, z: -4.35, scale: 1.55 }, mobile: { x: 0, y: 2.04, z: -4.3, scale: .61 } };
 const NICHE_X = .12, NICHE_Z = -9.86;
 // Coastal window in the back wall, right of the niche.
 const WINDOW = { x: 1.62, half: .42, sill: .55, spring: 2.55 };
@@ -78,7 +78,7 @@ const lathe = (points: [number, number][]) => points.map(([x, y]) => new Vector2
 function useDisposable<T extends { dispose: () => void }>(factory: () => T[], deps: unknown[] = []) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const items = useMemo(factory, deps);
-  useEffect(() => () => items.forEach(item => item.dispose()), [items]);
+  useEffect(() => () => items.forEach(item => { if (!isSharedTexture(item)) item.dispose(); }), [items]);
   return items;
 }
 
@@ -131,8 +131,7 @@ type RoomMaterials = ReturnType<typeof useRoomMaterials>;
 
 type BookHandlers = { onHover: (slug: string | null) => void; onSelect: (slug: string) => void };
 
-// Spine, front board and back cloth for each official volume. Fronts carry the official cover art (cropped from the
-// approved banners); a volume without a cover falls back to an explicit "pending" plate, never an invented cover.
+// Spine, front board and back cloth for each official volume. Fronts carry the official cover art; a volume without a cover falls back to an explicit "pending" plate, never an invented cover.
 function loadCover(src: string, invalidate: () => void) {
   const texture = new TextureLoader().load(src, () => invalidate());
   texture.colorSpace = SRGBColorSpace; texture.anisotropy = 8;
@@ -146,7 +145,7 @@ function useVolumeMaterials(items: ShelfItem[], tones: string[], env: Texture, w
       const front = item.cover ? loadCover(item.cover, invalidate) : pendingCover(item.title, item.code);
       return [spineLabel(item.title, item.code, tone), front, bookcloth(tone, 90 + i)];
     }),
-    ...(workbook ? [spineLabel('O Meu Corpo em Construção', 'Workbook', '#efe6d6'), loadCover(workbookCover, invalidate), bookcloth('#efe6d6', 99)] : []),
+    ...(workbook ? [spineLabel('O Meu Corpo em Construção', 'Workbook', '#efe6d6'), loadCover(workbookCover.src, invalidate), bookcloth('#efe6d6', 99)] : []),
   ], [items, tones, workbook, invalidate]);
   const materials = useDisposable<Material>(() => textures.map((map, i) => new MeshStandardMaterial({ map, roughness: i % 3 === 1 ? .62 : .86, envMap: env, envMapIntensity: .35 })), [env, ...textures]);
   const sets = Array.from({ length: materials.length / 3 }, (_, i) => ({ spine: materials[i * 3], front: materials[i * 3 + 1], back: materials[i * 3 + 2] }));
@@ -160,6 +159,7 @@ function Volume({ item, x, hovered, selected, mobile, faces, handlers }: {
   const timeline = useRef<gsap.core.Timeline | null>(null);
   const { invalidate, gl } = useThree();
   const slot = { x: NICHE_X + x, y: VOLUME_SHELF, z: NICHE_Z + .18 };
+  const height = VOLUME_WIDTH * item.ratio;
   // Spine-out on the shelf. Set once here: a JSX rotation prop would be re-applied on every render and fight GSAP.
   useLayoutEffect(() => { group.current?.rotation.set(0, Math.PI / 2, 0); }, []);
   useEffect(() => {
@@ -172,7 +172,7 @@ function Volume({ item, x, hovered, selected, mobile, faces, handlers }: {
       const pose = mobile ? PRESENT.mobile : PRESENT.desktop;
       // Pull off the shelf, then carry it to the visitor while it turns its front board toward the camera.
       tl.to(target.position, { z: .34, duration: .32, ease: 'power2.out' })
-        .to(target.position, { x: pose.x - slot.x, y: pose.y - slot.y - .19 * pose.scale, z: pose.z - slot.z, duration: .95, ease: 'power3.inOut' })
+        .to(target.position, { x: pose.x - slot.x, y: pose.y - slot.y - height / 2 * pose.scale, z: pose.z - slot.z, duration: .95, ease: 'power3.inOut' })
         .to(target.rotation, { x: -.04, y: 0, duration: .95, ease: 'power3.inOut' }, '<')
         .to(target.scale, { x: pose.scale, y: pose.scale, z: pose.scale, duration: .95, ease: 'power3.inOut' }, '<');
     } else if (atRest) {
@@ -198,11 +198,11 @@ function Volume({ item, x, hovered, selected, mobile, faces, handlers }: {
   }, [selected, hovered, mobile, invalidate]);
   return <group position={[slot.x, slot.y, slot.z]}>
     <group ref={group} name={`espelho-book-${item.slug}`}>
-      <mesh castShadow receiveShadow position={[0, .19, 0]} material={faces}
+      <mesh castShadow receiveShadow position={[0, height / 2, 0]} material={faces}
         onPointerOver={event => { event.stopPropagation(); if (!selected) { handlers.onHover(item.slug); document.body.style.cursor = 'pointer'; } }}
         onPointerOut={() => { handlers.onHover(null); document.body.style.cursor = ''; }}
         onClick={event => { event.stopPropagation(); if (!selected) { document.body.style.cursor = ''; handlers.onSelect(item.slug); } }}>
-        <boxGeometry args={[.27, .38, .06]} />
+        <boxGeometry args={[VOLUME_WIDTH, height, .06]} />
       </mesh>
     </group>
   </group>;
@@ -267,7 +267,7 @@ function NicheLibrary({ items, workbook, tones, focusBook, selectedBook, mobile,
       hovered={focusBook === item.slug && selectedBook !== item.slug} selected={selectedBook === item.slug} />)}
     <AccentLight items={items} focusBook={focusBook} selectedBook={selectedBook} mobile={mobile} />
     {/* The workbook included with Corpo Forte, displayed face-out on the upper shelf. */}
-    {workbookFaces ? <mesh castShadow receiveShadow position={[NICHE_X - .02, 1.87 + .19, NICHE_Z + .2]} rotation={[-.08, .05, 0]} material={workbookFaces}><boxGeometry args={[.25, .38, .03]} /></mesh> : null}
+    {workbookFaces ? <mesh castShadow receiveShadow position={[NICHE_X - .02, 1.87 + .25 * workbookCover.ratio / 2, NICHE_Z + .2]} rotation={[-.08, .05, 0]} material={workbookFaces}><boxGeometry args={[.25, .25 * workbookCover.ratio, .03]} /></mesh> : null}
     <Spines x={-.62} y={VOLUME_SHELF + .02} count={10} m={m} seed={4} />
     <Spines x={.19} y={VOLUME_SHELF + .02} count={9} m={m} seed={6} />
     <Spines x={-.66} y={1.87} count={5} m={m} seed={1} />
